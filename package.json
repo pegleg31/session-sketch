@@ -1,0 +1,8 @@
+{
+  "name": "session-sketch",
+  "private": true,
+  "description": "SNHU AI Labs — Session Sketch faculty intake tool. Static HTML + one Vercel function (api/ideas.js) that generates three activity ideas; the engine decides type and casting and rejects ideas that fail its rules.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0"
+  }
+}

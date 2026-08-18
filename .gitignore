@@ -1,0 +1,19 @@
+# test-harness scratch (regenerated on every run)
+_b.js
+_be.js
+_bi.js
+_pb.js
+_dbg.js
+
+# working artifacts, safe to delete per the handoff
+_check_p2.png
+_print_test.pdf
+_pre-*.html
+
+# dependencies + local deploy state
+node_modules/
+.vercel/
+
+# never commit credentials — the API key lives only in Vercel env vars
+.env
+.env.*

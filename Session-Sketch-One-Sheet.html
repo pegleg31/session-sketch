@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session Sketch — SNHU AI Labs paper one-sheet</title>
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root{color-scheme:light;
+  /* SNHU ATSD tokens — exact values, canonical names */
+  --ink-blue:#00244e; --gold:#fdb913; --heritage:#0a3370; --sky-blue:#009dea;
+  --impact-blue:#00559a; --parchment:#f4f0ec; --soft-blue:#e6f0f7; --warm-brown:#a55b00;
+  --panel-tint:#faf7f3; --white:#ffffff; --warm-black:#1d1c18; --line:#d9d2c7;
+  --line-soft:#e2ddd5; --muted:#5b6b7c; --placeholder:#8b9bad; --dim-on-navy:#cfe0f2;
+  --radius:4px;
+  /* short aliases used below */
+  --ink:var(--ink-blue); --her:var(--heritage); --imp:var(--impact-blue);
+  --soft:var(--soft-blue); --brown:var(--warm-brown); --parch:var(--parchment);
+  --tint:var(--panel-tint); --soft-line:var(--line-soft); --black:var(--warm-black)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--line);font-family:'Inter',Arial,sans-serif;color:var(--black);font-size:9.6pt;line-height:1.42}
+.page{width:8.5in;min-height:11in;background:#fff;margin:16px auto;padding:0.5in 0.55in;position:relative}
+.bar{background:var(--ink);color:#fff;border-bottom:3px solid var(--gold);margin:-0.5in -0.55in 14px;padding:12px 0.55in;display:flex;align-items:flex-end;gap:14px}
+.bar .eb{font-size:7pt;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.bar h1{margin:0;font-size:17pt;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.bar .r{margin-left:auto;font-size:8pt;color:var(--dim-on-navy);text-align:right;line-height:1.35}
+h2{font-size:11pt;font-weight:800;color:var(--ink);margin:13px 0 3px}
+h2 .num{display:inline-flex;width:17px;height:17px;background:var(--gold);color:var(--ink);
+  border-radius:var(--radius);align-items:center;justify-content:center;font-size:8.5pt;font-weight:800;margin-right:7px;vertical-align:1px}
+.sub{color:var(--muted);font-size:8.4pt;margin:0 0 7px}
+.q{margin:0 0 8px}
+.q .t{font-weight:700;color:var(--ink);font-size:9.4pt}
+.q .h{color:var(--muted);font-size:8pt;margin:1px 0 3px}
+.line{border-bottom:1px solid var(--line);height:15px}
+.line.sm{height:13px}
+.box{border:1px solid var(--line);background:var(--tint);border-radius:var(--radius);height:44px}
+.row{display:flex;gap:12px}
+.row>*{flex:1}
+.ck{display:flex;gap:6px;align-items:flex-start;font-size:8.8pt;margin-bottom:3.5px}
+.ck i{flex:0 0 11px;width:11px;height:11px;border:1.2px solid var(--ink);border-radius:2px;display:block;margin-top:1.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.pill{border:1px solid var(--line);background:var(--tint);border-radius:var(--radius);padding:3px 10px;font-size:8.6pt;font-weight:600}
+.note{background:var(--soft);border-radius:var(--radius);padding:6px 10px;margin:7px 0;font-size:8.2pt}
+.note > b{color:var(--imp);text-transform:uppercase;letter-spacing:.1em;font-size:7pt;display:block;margin-bottom:2px}
+.note p strong{font-weight:800;color:var(--ink)}
+.star{border:1px solid var(--brown);border-left-width:3px;border-radius:var(--radius);padding:6px 10px;background:#fff}
+.star b{color:var(--brown);text-transform:uppercase;letter-spacing:.1em;font-size:7pt;display:block;margin-bottom:2px}
+table{width:100%;border-collapse:collapse;font-size:8.3pt;margin-top:3px}
+th{background:var(--ink);color:#fff;text-align:left;font-size:7pt;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px}
+td{border-bottom:1px solid var(--soft-line);padding:4px 8px;vertical-align:top}
+td.ty{font-weight:800;color:var(--ink);white-space:nowrap}
+td.ty span{display:block;font-weight:600;color:var(--brown);font-size:7.6pt;letter-spacing:.04em}
+td .eg{display:block;margin-top:2px;color:var(--imp);font-size:7.3pt;line-height:1.3}
+td .eg b{color:var(--imp);font-weight:700}
+.foot{position:absolute;bottom:0.28in;left:0.55in;right:0.55in;border-top:1px solid var(--soft-line);
+  padding-top:5px;font-size:7.4pt;color:var(--muted);display:flex}
+.foot .r{margin-left:auto}
+.tally{border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:var(--radius);padding:9px 12px;margin-top:5px}
+.tally .g{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center;margin-top:6px}
+.tally .g div{border:1px solid var(--line);border-radius:var(--radius);padding:6px 4px}
+.tally .g b{display:block;font-size:8.6pt;color:var(--ink)}
+.tally .g i{display:block;font-style:normal;font-size:15pt;font-weight:800;color:var(--line);margin-top:2px}
+@media print{
+  body{background:#fff}
+  .page{margin:0;width:auto;min-height:0;padding:0.45in 0.5in;page-break-after:always}
+  .page:last-child{page-break-after:auto}
+  @page{size:letter;margin:0}
+}
+</style>
+</head>
+<body>
+<!-- ============ PAGE 1 ============ -->
+<section class="page">
+  <div class="bar">
+    <div>
+      <div class="eb">SNHU AI Labs</div>
+      <h1>Session Sketch</h1>
+    </div>
+    <div class="r">Paper version &middot; 15 minutes &middot; 3 sides<br>Faculty name ____________________</div>
+  </div>
+
+  <p class="sub" style="font-size:9pt">Nothing on this sheet is about AI. Answer it the way you would describe your course to a colleague &mdash; the tag, the timings, the roles and the built-in teaching moments get worked out from your answers. <b>SNHU AI Labs</b> are short, project-based workshops where students use AI to build something real and leave with a skill that lasts; every Lab is tagged by the artifact they create.</p>
+
+  <h2><span class="num">1</span>Your class</h2>
+  <div class="row">
+    <div class="q"><div class="t">Course or class</div><div class="line"></div></div>
+    <div class="q"><div class="t">The one topic or unit this Lab sits in</div><div class="line"></div></div>
+  </div>
+  <div class="q"><div class="t">Subject</div>
+    <div class="h">Sets the language the finished Lab is written in. It does not affect which kind of Lab you get.</div>
+    <div class="two">
+      <div class="ck"><i></i><span>Accounting &amp; Finance</span></div>
+      <div class="ck"><i></i><span>Education &amp; Teaching</span></div>
+      <div class="ck"><i></i><span>Business &amp; Management</span></div>
+      <div class="ck"><i></i><span>Psychology &amp; Sociology</span></div>
+      <div class="ck"><i></i><span>Marketing, Sales &amp; Communication</span></div>
+      <div class="ck"><i></i><span>Justice, Law &amp; Public Policy</span></div>
+      <div class="ck"><i></i><span>Analytics &amp; Data</span></div>
+      <div class="ck"><i></i><span>History, English &amp; Writing</span></div>
+      <div class="ck"><i></i><span>Computing &amp; Software</span></div>
+      <div class="ck"><i></i><span>Design &amp; Media Arts</span></div>
+      <div class="ck"><i></i><span>Cybersecurity &amp; IT Infrastructure</span></div>
+      <div class="ck"><i></i><span>Natural &amp; Health Sciences</span></div>
+      <div class="ck"><i></i><span>Game Design &amp; Interactive Media</span></div>
+      <div class="ck"><i></i><span>Mathematics &amp; Physics</span></div>
+      <div class="ck"><i></i><span>Engineering &amp; Construction</span></div>
+      <div class="ck"><i></i><span>Other or interdisciplinary</span></div>
+    </div></div>
+
+  <div class="q"><div class="t">What do you do in class on this topic right now?</div>
+    <div class="h">Lecture, practice problems, case study, discussion. The Lab will add a layer rather than repeat this.</div>
+    <div class="line sm"></div><div class="line sm"></div></div>
+
+  <h2><span class="num">2</span>What kind of thing is this topic?</h2>
+  <p class="sub">The most important answer on this sheet &mdash; it decides the shape of the activity. Tick one.</p>
+  <div class="two">
+    <div class="ck"><i></i><span><b>Done correctly or incorrectly</b> &mdash; a technique, a calculation, a standard to apply, a tool to operate</span></div>
+    <div class="ck"><i></i><span><b>Understood or argued about</b> &mdash; a body of knowledge, a text, a historical event, a population</span></div>
+    <div class="ck"><i></i><span><b>Navigated by people</b> &mdash; a situation, a live interaction, a workflow, a judgment call</span></div>
+    <div class="ck"><i></i><span><b>Built or designed</b> &mdash; a brief, a working build, a spec, a plan, a system, a required document</span></div>
+  </div>
+  <p class="sub" style="margin-top:4px">Then write the specific one: ____________________________________________________ <span style="color:var(--muted)">(the digital Session Sketch splits these four into eighteen)</span></p>
+
+  <h2><span class="num">3</span>What students have in front of them</h2>
+  <p class="sub">The raw material. It decides how the Lab opens and what the first ten minutes look like.</p>
+  <div class="two">
+    <div class="ck"><i></i><span>A dataset, results, or records</span></div>
+    <div class="ck"><i></i><span>A process or procedure with steps</span></div>
+    <div class="ck"><i></i><span>Documents, written sources, or literature</span></div>
+    <div class="ck"><i></i><span>Something made &mdash; designs, images, code, creative work</span></div>
+    <div class="ck"><i></i><span>A real case &mdash; a person, client, or customer situation</span></div>
+    <div class="ck"><i></i><span>Competing claims, arguments, or positions</span></div>
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <div class="q"><div class="t">Class time available</div><div class="pills"><span class="pill">50 min</span><span class="pill">75 min</span><span class="pill">90 min</span></div></div>
+    <div class="q"><div class="t">Roughly how many students</div><div class="pills"><span class="pill">Under 12</span><span class="pill">12&ndash;25</span><span class="pill">26&ndash;40</span><span class="pill">Over 40</span></div></div>
+  </div>
+
+  <div class="foot"><span>SNHU AI Labs &middot; Session Sketch &middot; page 1 of 3</span><span class="r">Continue on the back &rarr;</span></div>
+</section>
+
+<!-- ============ PAGE 2 ============ -->
+<section class="page">
+  <div class="bar">
+    <div>
+      <div class="eb">SNHU AI Labs</div>
+      <h1>What good looks like</h1>
+    </div>
+    <div class="r">Page 2 &middot; then turn over<br>for what your answers mean</div>
+  </div>
+
+  <h2><span class="num">4</span>Three questions, three different axes</h2>
+  <p class="sub">What students should be able to do, who the work is for, and what actually goes wrong now. These refine what your content has already said rather than deciding it. Tick one in each.</p>
+
+  <div class="q"><div class="t">By the end, what should students be able to do differently?</div>
+    <div class="two">
+      <div class="ck"><i></i><span><b>CR</b> &mdash; Make something they did not think they could make</span></div>
+      <div class="ck"><i></i><span><b>RE</b> &mdash; Tell sound work from unsound work</span></div>
+      <div class="ck"><i></i><span><b>CP</b> &mdash; Hold their own against a rival or a deadline</span></div>
+      <div class="ck"><i></i><span><b>SI</b> &mdash; Understand the situation from the inside</span></div>
+    </div></div>
+
+  <div class="q"><div class="t">Who is the thing they walk out with actually for?</div>
+    <div class="h">Every answer is a person, and the person decides the tag.</div>
+    <div class="two">
+      <div class="ck"><i></i><span><b>CR</b> &mdash; A client, or a future employer &mdash; someone who wants the work itself</span></div>
+      <div class="ck"><i></i><span><b>RE</b> &mdash; Someone who has to act on it and needs to know it is right</span></div>
+      <div class="ck"><i></i><span><b>CP</b> &mdash; A judge, a panel, or the other team &mdash; someone deciding who did better</span></div>
+      <div class="ck"><i></i><span><b>SI</b> &mdash; A learner &mdash; someone who understands it only by going through it</span></div>
+    </div></div>
+
+  <div class="q"><div class="t">What goes wrong most often in student work on this topic?</div>
+    <div class="h">Answer from grading, not from theory.</div>
+    <div class="two">
+      <div class="ck"><i></i><span><b>RE</b> &mdash; It is wrong, and they did not check</span></div>
+      <div class="ck"><i></i><span><b>CR</b> &mdash; It is correct but generic &mdash; it could be anyone&rsquo;s</span></div>
+      <div class="ck"><i></i><span><b>CP</b> &mdash; It reads fine on paper, but they would struggle to do it for real</span></div>
+      <div class="ck"><i></i><span><b>SI</b> &mdash; It is accurate, but they cannot picture where this actually happens</span></div>
+    </div></div>
+
+  <h2><span class="num">5</span>The things only you know</h2>
+
+  <div class="q"><div class="t">Does this work involve competing &mdash; for a deal, a contract, a client, a place, or against a deadline?</div>
+    <div class="h">Only the last option rules a Compete Lab out.</div>
+    <div class="pills"><span class="pill">Against other teams</span><span class="pill">Against a real clock</span><span class="pill">Both</span><span class="pill">Neither</span></div></div>
+
+  <div class="q"><div class="t">Do your students bring lived or professional experience to this topic?</div>
+    <div class="pills"><span class="pill">Yes &mdash; many do this work</span><span class="pill">Some do</span><span class="pill">No &mdash; new territory</span></div></div>
+
+  <div class="star">
+    <b>The two most valuable answers on this sheet</b>
+    <div style="font-weight:700;color:var(--ink);font-size:9.6pt;margin-bottom:1px">Name one mistake about this topic that only someone who knows the field would catch.</div>
+    <div class="h" style="color:var(--muted);font-size:8pt;margin-bottom:3px">What makes you wince when a student submits it? This exact mistake gets planted in the Lab. Nothing builds without it.</div>
+    <div class="line sm"></div><div class="line sm"></div>
+    <div style="font-weight:700;color:var(--ink);font-size:9.4pt;margin-top:5px">How would a student catch it?</div>
+    <div class="two" style="margin-top:2px">
+      <div class="ck"><i></i><span>By running it and seeing the result is wrong</span></div>
+      <div class="ck"><i></i><span>By watching the consequence play out</span></div>
+      <div class="ck"><i></i><span>By checking it against a source or standard</span></div>
+      <div class="ck"><i></i><span>By losing to someone who got it right</span></div>
+      <div class="ck"><i></i><span>By knowing the field well enough to wince</span></div>
+    </div>
+  </div>
+
+  <div class="q" style="margin-top:8px"><div class="t">What worries you most about students using AI on this topic?</div>
+    <div class="two">
+      <div class="ck"><i></i><span>It sounds right but is wrong</span></div>
+      <div class="ck"><i></i><span>It skips or invents sources</span></div>
+      <div class="ck"><i></i><span>It is generic and flattens their voice</span></div>
+      <div class="ck"><i></i><span>They let it do the thinking</span></div>
+    </div></div>
+
+  <div class="q"><div class="t">If students remembered one thing a year later, what would it be?</div>
+    <div class="line sm"></div></div>
+
+  <div class="q" style="margin-bottom:0"><div class="t">Anything the Lab should avoid? <span style="font-weight:600;color:var(--muted)">(optional)</span></div>
+    <div class="line sm"></div></div>
+
+  <div class="foot"><span>SNHU AI Labs &middot; Session Sketch &middot; page 2 of 3</span><span class="r">Turn over for what your answers mean &rarr;</span></div>
+</section>
+
+<!-- ============ PAGE 3 ============ -->
+<section class="page">
+  <div class="bar">
+    <div>
+      <div class="eb">SNHU AI Labs</div>
+      <h1>What your answers mean</h1>
+    </div>
+    <div class="r">Page 3 &middot; reference<br>keep or hand in</div>
+  </div>
+
+  <p class="sub" style="font-size:9pt">A <b>Lab</b> is any SNHU AI Labs session; the tag says what kind. Your topic kind, your raw material, and how the mistake gets caught do most of the deciding &mdash; the three questions on page 2 refine it.</p>
+
+  <h2><span class="num">6</span>The four tags</h2>
+  <table>
+    <thead><tr><th style="width:104px">Tag</th><th>What students do &mdash; and the activities that fit</th><th style="width:29%">They walk out with</th></tr></thead>
+    <tbody>
+      <tr><td class="ty">CR &middot; Create<span>Making</span></td>
+        <td>Use AI to make something tangible, then push past its generic first attempt with their own knowledge.<span class="eg"><b>Pick one:</b> the real professional deliverable &middot; an explainer for outsiders &middot; a weak version and a strong one, compared</span></td>
+        <td>A finished, shareable piece of work &mdash; plus the prompt that changed it.</td></tr>
+      <tr><td class="ty">RE &middot; Research<span>Verifying</span></td>
+        <td>AI answers fluently and confidently; students verify it against something real. The error is planted, not hoped for.<span class="eg"><b>Pick one, by what they verify against:</b> Execute and Verify &mdash; run it and watch it fail &middot; The Data &mdash; cleaning is the verification &middot; The Source &mdash; trace to a primary origin &middot; Your Expertise &mdash; catch AI wrong in your field &middot; AI as Investigator &mdash; hunt a planted flaw</span></td>
+        <td>A conclusion plus its evidence trail &mdash; never a summary.</td></tr>
+      <tr><td class="ty">CP &middot; Compete<span>Racing or rivalry</span></td>
+        <td>Go head to head with a rival, or race a real clock, with AI driving the pace and the score.<span class="eg"><b>Pick one:</b> head-to-head negotiation &middot; a pitch-off &middot; race to working &middot; the adversarial pair &middot; an incoming queue &middot; a shrinking window</span></td>
+        <td>A decision log &mdash; every call made under pressure, and why.</td></tr>
+      <tr><td class="ty">SI &middot; Simulate<span>Exploring</span></td>
+        <td>Build an experience someone else can step into. Depth of understanding shows immediately.<span class="eg"><b>Pick one:</b> an hour-by-hour journey &middot; one scene in full detail &middot; a branching path with consequences</span></td>
+        <td>A navigable scenario another person can learn from.</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="num">7</span>The quick read on your answers</h2>
+  <table>
+    <thead><tr><th style="width:46%">If your topic kind was&hellip;</th><th>&hellip;the tag is usually</th></tr></thead>
+    <tbody>
+      <tr><td>A technique, calculation, or standard</td><td><b>Research</b> &mdash; and if students catch the mistake by running it, Execute and Verify</td></tr>
+      <tr><td>Built or designed</td><td><b>Create</b> &mdash; unless the point is that it runs and is silently wrong, which is Research</td></tr>
+      <tr><td>Navigated by people</td><td><b>Simulate</b> &mdash; or <b>Compete</b> if there is a rival or a real clock</td></tr>
+      <tr><td>Understood or argued about</td><td><b>Research</b> &mdash; or Simulate for a historical moment students step into</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <b>Two rules that override any of the above</b>
+    <p style="margin:0"><strong>No rival and no clock, no Compete.</strong> A countdown bolted onto a verification activity is decoration &mdash; if the audit survives without the timer, it is Research. And <strong>if the artifact is for someone else to move through, it is Simulate, not Create</strong>: a Create artifact is for the maker, a Simulate artifact is for a learner.</p>
+  </div>
+
+  <div class="note" style="background:var(--parch)">
+    <b>If it is not ready yet</b>
+    <p style="margin:0">Two things stop a Lab from building, and both are two minutes of conversation: no planted error, or a topic that is still a whole unit rather than the single thing students most often get wrong. Fix either and it builds.</p>
+  </div>
+
+  <p class="sub" style="margin:7px 0 0;font-size:8pt">Every Lab runs on any AI tool a student already has &mdash; approved tools only, no real client or personal data &mdash; and states in writing what AI produced versus what the students decided.</p>
+
+  <div class="foot"><span>SNHU AI Labs &middot; Session Sketch &middot; page 3 of 3</span><span class="r">Hand this in &mdash; or enter it in the digital Session Sketch.</span></div>
+</section>
+
+</body>
+</html>

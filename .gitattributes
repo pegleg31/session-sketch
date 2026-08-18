@@ -1,0 +1,5 @@
+# NO line-ending conversion, ever. The inline build scripts
+# (build-ideas-inline.js, build-jobs-inline.js, build-portal.js) match anchors
+# byte-for-byte including LF newlines, and the test harnesses assert exact
+# script-block boundaries. A CRLF rewrite on checkout would break every anchor.
+* -text

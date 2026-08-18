@@ -1,0 +1,44 @@
+# Deployed: Session-Sketch-Portal.html, Session-Sketch.html, the two reference
+# pages, and api/. Everything below is source, snapshots or working files that
+# should live in git but never ship to the CDN.
+
+# frozen snapshots — never served
+Session-Sketch-v2-2026-08-10.html
+Session-Sketch-v3-2026-08-11.html
+Session-Sketch-v4-2026-08-12.html
+Session-Sketch-v5-2026-08-18.html
+Session-Sketch-One-Sheet-v2-2026-08-10.html
+Session-Sketch-One-Sheet-v2-2026-08-10.pdf
+Session-Sketch-One-Sheet.pdf
+UX-direction-mockups.html
+wave5-jobs.BROKEN-backup-17Aug-1508.js
+
+# portal + reference-page + idea-generator source (the generated HTML is what ships)
+portal.js
+portal.css
+wave5-jobs.js
+wave6-enrich.js
+wave7-ideas.js
+build-portal.js
+build-axis-grid.js
+build-job-card.js
+build-jobs-inline.js
+build-enrich-inline.js
+build-ideas-inline.js
+
+# tests and throwaway harnesses
+Session-Sketch-regression.js
+Session-Sketch-Portal-smoke.js
+Session-Sketch-ideas-test.js
+Session-Sketch-wave2-prototype.js
+Run-Wave2-Prototype.cmd
+
+# docs and design notes
+*.md
+
+# example faculty outputs and stray artifacts
+Session Sketches
+_check_p2.png
+_print_test.pdf
+_b.js
+node_modules

@@ -1,0 +1,462 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Verify It: survey data analysis — SNHU AI Labs</title><link rel="stylesheet" href="https://rsms.me/inter/inter.css"><style>
+:root{
+  color-scheme: light;
+  --ink-blue:#00244e; --gold:#fdb913; --heritage:#0a3370; --sky-blue:#009dea;
+  --impact-blue:#00559a; --parchment:#f4f0ec; --soft-blue:#e6f0f7; --warm-brown:#a55b00;
+  --panel-tint:#faf7f3; --white:#ffffff; --warm-black:#1d1c18; --line:#d9d2c7;
+  --line-soft:#e2ddd5; --muted:#5b6b7c; --placeholder:#8b9bad; --dim-on-navy:#cfe0f2;
+  --radius:4px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',Arial,sans-serif; background:var(--parchment); color:var(--warm-black);
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.tnum{font-variant-numeric:tabular-nums}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+/* ---------- masthead ---------- */
+header.mast{background:var(--ink-blue);color:#fff;border-bottom:3px solid var(--gold)}
+.mast-in{max-width:1080px;margin:0 auto;padding:18px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.mark{width:34px;height:34px;flex:0 0 34px;border:1.75px solid #fff;border-radius:3px;display:flex;align-items:center;justify-content:center}
+.mark svg{display:block}
+.mast h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.mast .sub{font-size:12.5px;color:var(--dim-on-navy);margin:0}
+.mast-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn{font-family:inherit;font-size:12.5px;font-weight:700;border-radius:var(--radius);padding:9px 15px;cursor:pointer;border:1px solid transparent;line-height:1.2}
+.btn-gold{background:var(--gold);color:var(--ink-blue)}
+.btn-gold:hover{background:#ffc93c}
+.btn-ghost-light{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+.btn-ghost-light:hover{background:rgba(255,255,255,.1)}
+.btn-ink{background:var(--ink-blue);color:#fff}
+.btn-ink:hover{background:#001838}
+.btn-ghost{background:#fff;color:var(--ink-blue);border-color:var(--line)}
+.btn-ghost:hover{background:var(--panel-tint)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn-sm{font-size:11.5px;padding:6px 11px}
+
+/* ---------- step rail ---------- */
+.rail{background:#fff;border-bottom:1px solid var(--line)}
+.rail-in{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;gap:2px;overflow-x:auto}
+.step{appearance:none;background:none;border:none;font-family:inherit;cursor:pointer;
+  padding:14px 14px 11px;border-bottom:3px solid transparent;color:var(--muted);
+  font-size:12.5px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.step:hover{color:var(--ink-blue)}
+.step .n{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;
+  font-variant-numeric:tabular-nums;flex:0 0 20px}
+.step.on{color:var(--ink-blue);border-bottom-color:var(--gold);font-weight:800}
+.step.on .n{background:var(--gold);border-color:var(--gold);color:var(--ink-blue)}
+.step.done .n{background:var(--heritage);border-color:var(--heritage);color:#fff}
+.step[disabled]{opacity:.45;cursor:not-allowed}
+
+/* ---------- cards ---------- */
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin:18px 0}
+.card.hero{border-top:3px solid var(--gold)}
+.card h2{margin:0 0 4px;font-size:22px;font-weight:800;color:var(--ink-blue);letter-spacing:-.01em}
+.card h3{margin:22px 0 8px;font-size:15px;font-weight:800;color:var(--ink-blue)}
+.lead{margin:0 0 18px;color:var(--muted);font-size:14px;max-width:70ch}
+.rule{height:0;border:none;border-top:1px solid var(--line-soft);margin:20px 0}
+.eb{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--warm-brown);margin-bottom:6px}
+
+/* ---------- fields ---------- */
+.q{margin:0 0 22px}
+.q > label.qt, .qt{display:block;font-size:14.5px;font-weight:700;color:var(--ink-blue);margin-bottom:3px}
+.qh{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+input[type=text],textarea,select{
+  width:100%;font-family:inherit;font-size:13.5px;color:var(--warm-black);
+  background:var(--panel-tint);border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px}
+textarea{min-height:64px;resize:vertical;line-height:1.5}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--impact-blue);outline-offset:-1px;background:#fff}
+::placeholder{color:var(--placeholder)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:11px;align-items:flex-start;background:var(--panel-tint);
+  border:1px solid var(--line);border-radius:var(--radius);padding:11px 13px;cursor:pointer;font-size:13.5px}
+.opt:hover{background:#fff;border-color:var(--impact-blue)}
+.opt input{margin:2px 0 0;accent-color:var(--impact-blue);flex:0 0 auto}
+.opt.sel{background:var(--soft-blue);border-color:var(--impact-blue)}
+.opt b{font-weight:700}
+.pillrow{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:var(--panel-tint);border:1px solid var(--line);border-radius:var(--radius);
+  padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.pill.sel{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
+.callout{background:var(--soft-blue);border-radius:var(--radius);padding:13px 15px;margin:16px 0}
+.callout .lbl{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--impact-blue);margin-bottom:4px}
+.callout p{margin:0;font-size:13px}
+.fac{background:#fff;border-left:3px solid var(--gold);border-top:1px solid var(--line-soft);
+  border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
+  padding:11px 14px;margin:10px 0 0;font-size:12.5px;color:#3f3d38}
+.fac .lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--warm-brown);margin-bottom:3px}
+body:not(.fac-on) .fac{display:none}
+.navrow{display:flex;gap:10px;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft)}
+.navrow .sp{margin-left:auto}
+.warn{background:#fff;border:1px solid var(--warm-brown);border-left-width:3px;border-radius:var(--radius);padding:11px 14px;margin:10px 0;font-size:13px}
+.warn .lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--warm-brown);margin-bottom:3px}
+.hide{display:none!important}
+
+
+/* ---------- topic-kind grid + subject select ---------- */
+select{appearance:none;background:var(--panel-tint) url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2300244e' stroke-width='1.75'/%3E%3C/svg%3E") no-repeat right 11px center;padding-right:32px}
+.kindwrap{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+.kindgroup{min-width:0}
+.kindhead{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--warm-brown);
+  padding-bottom:5px;margin-bottom:7px;border-bottom:1px solid var(--line)}
+.kindrow{display:flex;gap:9px;align-items:flex-start;background:var(--panel-tint);border:1px solid var(--line);
+  border-radius:var(--radius);padding:8px 10px;cursor:pointer;margin-bottom:6px}
+.kindrow:hover{background:#fff;border-color:var(--impact-blue)}
+.kindrow.sel{background:var(--soft-blue);border-color:var(--impact-blue)}
+.kindrow input{margin:2px 0 0;accent-color:var(--impact-blue);flex:0 0 auto}
+.kindrow .kl{font-size:12.5px;font-weight:600;color:var(--ink-blue);line-height:1.35}
+.kindrow .ke{display:block;font-weight:400;font-size:11.5px;color:var(--muted);margin-top:2px}
+@media (max-width:760px){.kindwrap{grid-template-columns:1fr}}
+.axiswrap{display:grid;gap:6px;margin-top:2px}
+.axisdt{margin-top:2px}
+.axisdt>summary{list-style:none;cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;
+  background:var(--panel-tint);border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px;font-size:13px}
+.axisdt>summary::-webkit-details-marker{display:none}
+.axisdt>summary::before{content:"\25B8";color:var(--impact-blue);font-weight:700;font-size:11px;flex:0 0 auto}
+.axisdt[open]>summary::before{content:"\25BE"}
+.axisdt>summary:hover{border-color:var(--impact-blue);background:#fff}
+.axisdt.need>summary{border-left:3px solid var(--gold)}
+.axispick{font-weight:700;color:var(--ink-blue)}
+.axischange{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--impact-blue)}
+.axismore{font-weight:600;color:var(--muted)}
+.axisdt[open]>.axiswrap{margin-top:6px}
+/* ---------- activity section ---------- */
+.muted-note{color:var(--muted);font-size:12px}
+.actpitch{font-size:17px;line-height:1.45;color:var(--ink-blue);font-weight:600;margin:0 0 4px;max-width:62ch}
+ol.rl.beats li{margin-bottom:9px}
+.patgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.patcard{font-family:inherit;text-align:left;box-sizing:border-box;background:var(--panel-tint);border:1px solid var(--line);
+  border-radius:var(--radius);padding:13px 14px;cursor:pointer;display:flex;flex-direction:column;gap:5px}
+.patcard:hover{background:#fff;border-color:var(--impact-blue)}
+.patcard:focus-visible{outline:2px solid var(--impact-blue);outline-offset:2px}
+.patcard.sel{background:var(--soft-blue);border-color:var(--impact-blue);border-top:3px solid var(--gold);padding-top:11px}
+.patcard .pn{font-size:13.5px;font-weight:800;color:var(--ink-blue)}
+.patcard .pn em{font-style:normal;font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--impact-blue)}
+.patcard .pn em.fit{color:var(--warm-brown)}
+.patcard .pp{font-size:12.5px;color:#3f3d38;line-height:1.45}
+.patcard .pw{font-size:12px;font-weight:700;color:var(--impact-blue);line-height:1.4}
+.patcard .pa{font-size:11.5px;color:var(--warm-brown);font-weight:600;line-height:1.4}
+@media (max-width:760px){.patgrid{grid-template-columns:1fr}}
+.jgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.jcol{background:var(--panel-tint);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.jcol.jlift{border-top:3px solid var(--sky-blue)}
+.jcol.jlimit{border-top:3px solid var(--warm-brown)}
+.jcol .jh{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--warm-brown);margin-bottom:6px}
+.jcol p{margin:0 0 8px;font-size:13px;line-height:1.5}
+.jcol p:last-child{margin-bottom:0}
+.jcol .jwow{color:var(--impact-blue)}
+.jcol .jfail{color:var(--warm-brown)}
+@media (max-width:640px){.jgrid{grid-template-columns:1fr}}
+/* ---------- result view ---------- */
+.verdict.notready{background:#fff;color:var(--warm-black);border:1px solid var(--warm-brown);border-top:3px solid var(--warm-brown)}
+.verdict.notready h2,.verdict.notready p{color:var(--warm-black)}
+.verdict.notready .eb{color:var(--warm-brown)}
+.verdict{background:var(--ink-blue);color:#fff;border-radius:var(--radius);border-top:3px solid var(--gold);padding:24px 26px}
+.verdict .eb{color:var(--gold)}
+.verdict h2{color:#fff;font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+.verdict .tag{display:inline-flex;align-items:center;gap:7px;background:var(--gold);color:var(--ink-blue);
+  border-radius:var(--radius);padding:6px 12px;font-size:12.5px;font-weight:800;margin-bottom:14px}
+.verdict p{color:var(--dim-on-navy);margin:0 0 10px;font-size:14px;max-width:74ch}
+.verdict .meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14)}
+.verdict .meta div{font-size:12.5px;color:var(--dim-on-navy)}
+.verdict .meta b{display:block;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
+.scorebars{display:grid;gap:7px;margin:6px 0 0}
+.sb{display:grid;grid-template-columns:104px 1fr 34px;gap:10px;align-items:center;font-size:12.5px}
+.sb .bar{height:9px;background:var(--panel-tint);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.sb .bar i{display:block;height:100%;background:var(--sky-blue)}
+.sb.p1 .bar i{background:var(--gold)}
+.sb.p2 .bar i{background:var(--heritage)}
+.sb .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.kv{display:grid;grid-template-columns:172px 1fr;gap:10px 18px;font-size:13.5px}
+.kv dt{font-weight:700;color:var(--warm-brown);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-top:3px}
+.kv dd{margin:0}
+table.ph{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+table.ph th{background:var(--ink-blue);color:#fff;text-align:left;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;padding:8px 10px;font-weight:700}
+table.ph td{border-bottom:1px solid var(--line-soft);padding:8px 10px;vertical-align:top}
+table.ph td.mins{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}
+table.ph td.word{font-weight:700;color:var(--warm-brown)}
+ol.rl{margin:6px 0 0;padding-left:20px;font-size:13.5px}
+ol.rl li{margin-bottom:6px}
+.stem{background:var(--panel-tint);border:1px solid var(--line);border-left:3px solid var(--gold);
+  border-radius:var(--radius);padding:13px 15px;font-size:13.5px;font-style:italic}
+pre.prompt{background:var(--ink-blue);color:var(--dim-on-navy);border-radius:var(--radius);
+  padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;
+  line-height:1.7;white-space:pre-wrap;max-height:420px;overflow:auto;margin:8px 0 0}
+.copied{color:var(--impact-blue);font-size:12px;font-weight:700;margin-left:10px}
+@media print{
+  header.mast,nav.rail,.navrow,.mast-actions,.noprint{display:none!important}
+  body{background:#fff;font-size:11pt}
+  .wrap{max-width:none;padding:0}
+  .card,.verdict{break-inside:avoid;margin:10pt 0;border:1px solid #999}
+  .verdict{background:#fff!important;color:#000!important;border-top:3px solid var(--gold)}
+  .verdict h2,.verdict p,.verdict .meta div{color:#000!important}
+  pre.prompt{background:#fff;color:#000;border:1px solid #999;max-height:none}
+  .sb .bar i,.verdict,.verdict .tag{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.kv dt{padding-top:8px}}
+
+
+/* ============================================================
+   Wave 3 — conversational portal layer.
+   Reuses the brand tokens and result styles already in <head>.
+   The intake is a self-contained chat WINDOW: a bounded card
+   with a titlebar, an internally-scrolling message area, and a
+   review panel that slides over the window. The finished concept
+   renders full-width below the window, as a document.
+   ============================================================ */
+
+/* ---------- the chat window ---------- */
+.stage{max-width:880px;margin:0 auto;padding:24px 24px 64px}
+.chatwin{position:relative;overflow:hidden;display:flex;flex-direction:column;
+  height:min(74vh,720px);min-height:460px;
+  background:#fff;border:1px solid var(--line);border-radius:10px}
+
+.wintop{display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+  padding:10px 15px;background:var(--ink-blue);color:#fff;border-bottom:3px solid var(--gold)}
+.winmark{width:26px;height:26px;flex:0 0 26px;border:1.5px solid rgba(255,255,255,.55);
+  border-radius:5px;display:flex;align-items:center;justify-content:center}
+.winmark svg{display:block}
+.wintitle{font-size:13.5px;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
+.winmeta{font-size:12px;color:var(--dim-on-navy);min-width:0;display:flex;gap:7px;
+  align-items:center;flex-wrap:wrap;overflow:hidden}
+.winmeta b{color:#fff;font-weight:700}
+.winmeta .dot{color:rgba(255,255,255,.35)}
+.winmeta .none{color:var(--dim-on-navy);opacity:.85}
+.winprog{margin-left:auto;display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.pbar{width:108px;height:7px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--gold);transition:width .25s ease}
+.pcount{font-size:11.5px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+.drawerBtn{font-family:inherit;font-size:11.5px;font-weight:700;border:1px solid rgba(255,255,255,.5);
+  background:transparent;color:#fff;border-radius:var(--radius);padding:6px 11px;cursor:pointer;
+  white-space:nowrap;flex:0 0 auto}
+.drawerBtn:hover{background:rgba(255,255,255,.12)}
+.drawerBtn.on{background:var(--gold);color:var(--ink-blue);border-color:var(--gold)}
+@media (max-width:640px){.pbar{width:60px}.winmeta{font-size:11px}.wintitle{font-size:12.5px}}
+
+.winbody{flex:1 1 auto;overflow-y:auto;padding:20px 18px 24px;background:var(--panel-tint);
+  scroll-behavior:smooth;overflow-anchor:none}
+
+/* ---------- messages ---------- */
+.turn{margin:0 0 16px}
+.bot{display:flex;gap:10px;align-items:flex-start}
+.ava{flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:var(--ink-blue);
+  display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ava svg{display:block}
+.bub{background:#fff;border:1px solid var(--line);border-radius:3px 13px 13px 13px;padding:11px 14px;
+  max-width:82%;font-size:14px;line-height:1.5;color:var(--warm-black)}
+.bub .qh2{display:block;margin-top:6px;font-size:12px;color:var(--muted);line-height:1.45}
+.whyq{margin-top:8px}
+.whyq>summary{list-style:none;cursor:pointer;font-size:11.5px;font-weight:700;color:var(--impact-blue);
+  display:inline-flex;align-items:center;gap:5px;user-select:none}
+.whyq>summary::-webkit-details-marker{display:none}
+.whyq>summary::before{content:"\24D8";font-size:12px}
+.whyq[open]>summary{margin-bottom:5px}
+.whyq>p{margin:0;font-size:12px;line-height:1.5;color:var(--muted);
+  background:var(--panel-tint);border-left:2px solid var(--gold);border-radius:0 var(--radius) var(--radius) 0;padding:8px 11px}
+.bub b{color:var(--ink-blue)}
+.bub i{color:var(--warm-brown)}
+.pbnote{display:block;margin-top:8px;font-size:12px;color:var(--warm-brown);font-style:normal}
+
+.usr{display:flex;justify-content:flex-end;margin-top:8px}
+.ubub{background:var(--soft-blue);border:1px solid #cfe0f2;border-radius:13px 13px 4px 13px;
+  padding:8px 13px;max-width:78%;font-size:13.5px;line-height:1.45;color:var(--ink-blue);
+  cursor:pointer;position:relative}
+.ubub:hover{border-color:var(--impact-blue)}
+.ubub.skip{color:var(--placeholder);font-style:italic}
+.pen{margin-left:9px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--impact-blue);opacity:0;transition:opacity .12s}
+.ubub:hover .pen{opacity:1}
+
+/* ---------- active input ---------- */
+.ans{margin:11px 0 2px 38px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:inherit;font-size:13.5px;font-weight:600;background:#fff;border:1px solid var(--line);
+  color:var(--ink-blue);border-radius:99px;padding:8px 15px;cursor:pointer;line-height:1.3}
+.chip:hover{border-color:var(--impact-blue);background:var(--panel-tint)}
+.chip.sel{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
+.optc{display:block;width:100%;text-align:left;font-family:inherit;background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:11px 14px;cursor:pointer;margin-bottom:8px;font-size:13.5px;
+  line-height:1.4;color:var(--warm-black)}
+.optc:hover{border-color:var(--impact-blue);background:var(--panel-tint)}
+.optc.sel{background:var(--soft-blue);border-color:var(--impact-blue)}
+.optc b{color:var(--ink-blue)}
+.optc .ex{display:block;margin-top:3px;font-size:11.5px;color:var(--muted);font-weight:400}
+.optgrid{display:grid;gap:0}
+
+.compose{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.compose input[type=text],.compose textarea{flex:1 1 240px;font-family:inherit;font-size:14px;
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;color:var(--warm-black)}
+.compose textarea{min-height:66px;resize:vertical;line-height:1.5}
+.compose input:focus,.compose textarea:focus{outline:2px solid var(--impact-blue);outline-offset:-1px}
+.send{font-family:inherit;font-size:13px;font-weight:700;background:var(--gold);color:var(--ink-blue);
+  border:1px solid var(--gold);border-radius:var(--radius);padding:10px 18px;cursor:pointer;flex:0 0 auto}
+.send:hover{background:#ffc93c}
+.skip{font-family:inherit;font-size:12.5px;font-weight:700;background:#fff;color:var(--muted);
+  border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;cursor:pointer;flex:0 0 auto}
+.skip:hover{border-color:var(--impact-blue);color:var(--ink-blue)}
+
+.pbrow{display:flex;gap:9px;flex-wrap:wrap}
+.pbyes{font-family:inherit;font-size:13px;font-weight:700;background:var(--gold);color:var(--ink-blue);
+  border:1px solid var(--gold);border-radius:99px;padding:8px 18px;cursor:pointer}
+.pbyes:hover{background:#ffc93c}
+.pbfix{font-family:inherit;font-size:13px;font-weight:600;background:#fff;color:var(--ink-blue);
+  border:1px solid var(--line);border-radius:99px;padding:8px 16px;cursor:pointer}
+.pbfix:hover{border-color:var(--impact-blue);background:var(--panel-tint)}
+
+/* ---------- review panel (overlays the window) ---------- */
+.windrawer{position:absolute;inset:0;z-index:10;background:#fff;display:none;flex-direction:column}
+.windrawer.open{display:flex}
+.dwtop{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.dwt{font-size:13.5px;font-weight:800;color:var(--ink-blue)}
+.dwdone{margin-left:auto;font-family:inherit;font-size:12px;font-weight:700;background:var(--ink-blue);
+  color:#fff;border:1px solid var(--ink-blue);border-radius:var(--radius);padding:7px 15px;cursor:pointer}
+.dwdone:hover{background:#001838}
+.dwlist{flex:1 1 auto;overflow-y:auto;padding:2px 10px 14px}
+.dhead{font-size:11.5px;color:var(--muted);padding:11px 4px 6px}
+.drow{border-top:1px solid var(--line-soft);padding:11px 4px}
+.drow:first-child{border-top:none}
+.drow.hot{background:var(--soft-blue);border-radius:var(--radius);padding-left:10px;padding-right:10px}
+.drow .dl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.drow .dctl{display:block}
+
+/* ---------- finished concept: its own tabbed page (swaps in for the chat) ---------- */
+#result{display:none}
+body.resultview .stage{display:none}
+body.resultview #result{display:block}
+.rpage-in{max-width:1000px;margin:0 auto;padding:0 24px 64px}
+
+.rhead{position:sticky;top:0;z-index:20;background:var(--parchment);padding:16px 0 0;
+  margin:0 0 4px}
+.rhead-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.rttl{font-size:16px;font-weight:800;color:var(--ink-blue);letter-spacing:-.01em;
+  display:flex;align-items:center;gap:9px;min-width:0}
+.rtag{display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:var(--ink-blue);
+  border-radius:var(--radius);padding:4px 10px;font-size:12px;font-weight:800;flex:0 0 auto}
+.rtag svg{display:block}
+.rhead-btns{margin-left:auto;display:flex;gap:8px;flex:0 0 auto}
+.btn-back{font-family:inherit;font-size:12.5px;font-weight:700;background:#fff;
+  color:var(--ink-blue);border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;
+  cursor:pointer;flex:0 0 auto;white-space:nowrap}
+.btn-back:hover{background:var(--panel-tint);border-color:var(--impact-blue)}
+.rtabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line)}
+.rtab{appearance:none;background:none;border:none;font-family:inherit;cursor:pointer;
+  padding:11px 16px;border-bottom:3px solid transparent;color:var(--muted);
+  font-size:13px;font-weight:700;white-space:nowrap}
+.rtab:hover{color:var(--ink-blue)}
+.rtab.on{color:var(--ink-blue);border-bottom-color:var(--gold)}
+.rpane{padding-top:6px}
+.rpane[hidden]{display:none}
+.rfooter{margin-top:8px}
+
+@media print{
+  .mast,.mast-actions,.chatwin,.rhead,.rfooter{display:none!important}
+  body.resultview .stage{display:none}
+  .rpage-in{max-width:none;padding:0}
+  .rpane[hidden]{display:block!important}   /* print every tab, not just the open one */
+}
+
+</style></head><body class=""><div style="max-width:1000px;margin:0 auto;padding:24px 24px 60px"><div class="verdict" data-tab="rec"><div class="eb">Recommended tag</div><div class="tag"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M20 20l-4.8-4.8"></path></svg> Research</div><h2>Verify It: survey data analysis</h2><p><b>Why this type:</b> The skill is to perform a technique, procedure, or calculation with a right and wrong way, and students produce a decision, committed and defended, and students work from the dataset, and the planted error is caught by running it and seeing the result is wrong. Together those describe a session whose center is checking confident output against something real — which is what a Research Lab is.</p><p>Research means participants verify AI's fluent, confident output against a real anchor and leave with a conclusion plus its evidence trail.</p><div class="meta"><div><b>Length</b>75 minutes · 5 phases</div><div><b>Teams</b>4 students, 4 roles</div><div><b>AI visibility</b>Embedded (Lane 2 — in class)</div><div><b>Dominant literacy</b>Critiquing AI and Recognizing AI</div><div><b>Dominant pillar</b>Pillar 3 — Critical Evaluation</div></div></div><div class="card" data-tab="rec"><div class="eb">Read these first</div><div class="warn"><div class="lbl">Protect the cleaning step</div>Cleaning is where the judgment lives. Give it five explicit minutes and do not hand teams a pre-cleaned file — the session gets thinner the tidier the data is.</div></div><div class="card" data-tab="rec"><h2>How the four tags scored</h2><p class="lead">Your content points most strongly at one tag. Subject never votes here; topic kind, material and the way the planted error gets caught do.</p><div class="scorebars"><div class="sb p1"><span>Research</span><span class="bar"><i style="width:100%"></i></span><span class="v">11.3</span></div><div class="sb p2"><span>Compete</span><span class="bar"><i style="width:40%"></i></span><span class="v">4.5</span></div><div class="sb "><span>Create</span><span class="bar"><i style="width:13%"></i></span><span class="v">1.5</span></div><div class="sb "><span>Simulate</span><span class="bar"><i style="width:0%"></i></span><span class="v">-0.5</span></div></div><div class="callout"><div class="lbl">The runner-up — Compete</div><p>Tag it Compete if there is a rival or a real clock — someone wins, or the queue does not wait. Without either, a countdown is decoration.</p></div><div class="callout"><div class="lbl">Two rules that override any score</div><p><b>No rival and no clock, no Compete.</b> A countdown bolted onto a verification activity is decoration — if the audit survives without the timer, it is Research. <b>And if the artifact is for someone else to move through, it is Simulate, not Create</b>: a Create artifact is for the maker, a Simulate artifact is for a learner.</p></div><div class="fac"><div class="lbl">Facilitator note</div>Show the bars. Faculty trust a recommendation more when they can see what lost and why. If they want another tag, let them take it — the answers transfer straight across, and the tool will say what the switch obligates. The two override rules are the only place to hold firm.</div></div><div class="card" data-tab="rec"><div class="eb">Not the tag you want?</div><h2>Change it</h2><p class="lead">You know the class. Switching is allowed — the tool will tell you what the switch obligates you to add rather than quietly producing something thin.</p><div class="patgrid"><div class="patcard" role="button" tabindex="0" data-tag="studio"><span class="pn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M14.7 6.3a4 4 0 0 0 5 5l-9.9 9.9a2.1 2.1 0 0 1-3-3l9.9-9.9-2-2 2.8-2.8 2 2-2.8 2.8Z"></path></svg> Create</span><span class="pp">participants use AI to make something tangible</span></div><div class="patcard sel" role="button" tabindex="0" data-tag="lab"><span class="pn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M20 20l-4.8-4.8"></path></svg> Research <em>✓ current</em></span><span class="pp">participants verify AI's fluent, confident output against a real anchor and leave with a conclusion plus its evidence trail</span></div><div class="patcard" role="button" tabindex="0" data-tag="arena"><span class="pn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 3l8.5 8.5M20 3l-8.5 8.5M3 20l6-6M21 20l-6-6M14 17l3 3 3-3-3-3ZM10 17l-3 3-3-3 3-3Z"></path></svg> Compete</span><span class="pp">participants go head to head with a rival, or race a clock, with AI driving the pace and the score</span></div><div class="patcard" role="button" tabindex="0" data-tag="quests"><span class="pn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5Z"></path></svg> Simulate</span><span class="pp">participants build an immersive experience that teaches someone else</span></div></div></div><div class="card hero" data-tab="activity"><div class="eb">What AI is cast as</div><h2>The Apprentice</h2><p class="actpitch">AI is cast as the beginner they have to train.</p><div class="jgrid"><div class="jcol jlift"><div class="jh">Where it helps</div><p>Follows instructions exactly, which is the fastest way to find out what your instructions actually said.</p><p class="jwow"><b>The wow:</b> It does exactly what they said and it is still wrong — their own instructions, with the gaps visible.</p></div><div class="jcol jlimit"><div class="jh">Where it runs out</div><p>It fills gaps silently from training, so it hides omissions unless it is constrained.</p><p class="jfail"><b>Failure by design:</b> It over-performs by filling gaps from its own training, hiding the student's omissions.</p></div></div><div class="callout"><div class="lbl">The skill students can name afterward</div><p>Specifying a procedure precisely enough that something else can execute it.</p></div><div class="fac"><div class="lbl">Only the human can</div>Write the procedure. There is no way to fake understanding here. <span class="muted-note">The constraint — use nothing I did not tell you — always leaks on the first attempt.</span></div><div class="rule"></div><div class="eb">Three other ways this could run</div><p class="lead" style="margin:0 0 12px">Same topic, tag and activity — a different job for AI, and a different thing students take away. Tap one to rewrite the concept around it. If your students have met a Lab before, a different casting is what keeps the series fresh.</p><div class="patgrid"><div class="patcard sel" role="button" tabindex="0" data-job="apprentice"><span class="pn">The Apprentice <em>✓ current</em></span><span class="pw">AI as the beginner they have to train</span><span class="pp">Specifying a procedure precisely enough that something else can execute it.</span></div><div class="patcard" role="button" tabindex="0" data-job="oracle"><span class="pn">The Oracle</span><span class="pw">AI as the expert who already has the answer</span><span class="pp">Verifying an AI answer against something real before acting on it.</span></div><div class="patcard" role="button" tabindex="0" data-job="volume"><span class="pn">The Volume Engine</span><span class="pw">AI as the drafting room that never tires</span><span class="pp">Generating options at volume, then judging them against criteria you stated first.</span></div><div class="patcard" role="button" tabindex="0" data-job="mirror"><span class="pn">The Mirror</span><span class="pw">AI as the examiner holding the rubric</span><span class="pp">Using AI as a critic, and knowing which parts of a critique to reject.</span></div></div><details class="axisdt" style="margin-top:10px"><summary>Show the other 1 that fit this pair</summary><div class="patgrid" style="margin-top:8px"><div class="patcard" role="button" tabindex="0" data-job="witness"><span class="pn">The Witness</span><span class="pw">AI as the witness under questioning</span><span class="pp">Asking the question that reveals what AI does not know.</span></div></div></details></div><div class="card hero" data-tab="activity"><div class="eb">The activity</div><h2>What students actually do</h2><p class="muted-note" style="margin:0 0 5px">AI produces output that looks right; students catch it by running it.</p><p class="actpitch">AI produces something for survey data analysis that looks right. Teams run it against the dataset and find out that it is not. The working tool is Excel.</p><h3>How it runs</h3><ol class="rl beats"><li>Teams start with the raw data on survey data analysis — working out what it actually measures and what has to be cleaned before it can be used at all.</li><li>It does exactly what the team told it — and only that. Watching their own instructions execute is faster than any feedback a professor could give, because the gaps are suddenly visible.</li><li>It quietly fills what they left out from its own training, which hides the omission. The constraint — use nothing I did not tell you — always leaks on the first try, and the dataset is where the leak shows.</li></ol><h3>They leave with</h3><p class="lead" style="margin:0 0 4px">A verified result on survey data analysis: what AI produced, what happened when it was run, and the specific failure that only execution exposed.</p><div class="fac"><div class="lbl">Facilitator note — working from the dataset</div>Cleaning is where the judgment lives. Give it five explicit minutes and do not hand teams a pre-cleaned file — the session gets thinner the tidier the data is.</div><div class="rule"></div><div class="eb">Not the one you pictured?</div><p class="lead" style="margin:0 0 12px">Five activities carry the Research tag, one per anchor. They teach the same skill and run on the same phases and timings; the activity changes what students verify or make, while the casting above sets the wow and the failure. All of them work with the dataset.</p><div class="patgrid"><div class="patcard sel" role="button" tabindex="0" data-pat="lab" data-pi="Execute and Verify"><span class="pn">Execute and Verify <em>✓ chosen</em></span><span class="pw">AI produces output that looks right; students catch it by running it.</span><span class="pp">AI produces something for survey data analysis that looks right. Teams run it against the dataset and find out that it is not.</span><span class="pa">Anchor: the executed result — what actually happens when you run it</span></div><div class="patcard" role="button" tabindex="0" data-pat="lab" data-pi="The Data"><span class="pn">The Data <em class="fit">fits this topic</em></span><span class="pw">AI announces a finding from raw data; students clean the data to see whether the finding survives.</span><span class="pp">Teams clean and interrogate the dataset on survey data analysis to find out whether AI's finding actually holds. The cleaning is not preparation for the work; it is the work.</span><span class="pa">Anchor: the dataset itself — cleaning it is the verification</span></div><div class="patcard" role="button" tabindex="0" data-pat="lab" data-pi="The Source"><span class="pn">The Source <em class="fit">fits the dataset</em></span><span class="pw">AI makes cited claims; students trace each one to a primary source or mark it untraceable.</span><span class="pp">Every claim AI makes about survey data analysis gets traced back through the dataset to a primary, verifiable origin — or marked as untraceable.</span><span class="pa">Anchor: the primary source each claim traces back to</span></div><div class="patcard" role="button" tabindex="0" data-pat="lab" data-pi="Your Expertise"><span class="pn">Your Expertise <em class="fit">fits this topic</em></span><span class="pw">AI writes something fluent and subtly wrong; students' own field knowledge is the only detector in the room.</span><span class="pp">AI produces something fluent and subtly wrong about survey data analysis, and the only detection tool in the room is what students already know from the dataset.</span><span class="pa">Anchor: what the participant already knows about the field</span></div><div class="patcard" role="button" tabindex="0" data-pat="lab" data-pi="AI as Investigator"><span class="pn">AI as Investigator <em class="fit">fits the dataset</em></span><span class="pw">Students aim AI at a flawed target; sharp, specific prompts find what vague ones miss.</span><span class="pp">Teams turn AI loose on the dataset to hunt for a flaw planted in it — AI as the investigative instrument, not the thing being doubted.</span><span class="pa">Anchor: the target being investigated, with a flaw planted in it</span></div></div><div class="fac"><div class="lbl">Facilitator note</div>Read all three aloud and watch which one they react to. Faculty who cannot describe a session in the abstract will almost always recognize the right activity when they hear it. If none of the three lands, the topic is probably still too broad — go back a step rather than forcing a fit.</div></div><div class="card hero" data-tab="prompt"><div class="eb">The main output</div><h2>Where your Lab gets written</h2><p class="lead">This build prompt is the product. Copy it into your AI tool of choice and the finished session gets written from it — in your field’s voice, adapted to your students and to Excel. Every answer you gave is already inside it, along with instructions for the writing pass. The draft sketch below shows the shape of what will come back.</p><pre class="prompt" id="promptBox">You are designing an SNHU AI Labs session (a "Lab"). Use the SNHU AI Experience skills in order: the framework skill (the thirteen components and design system), the strip-it-down skill (separate the fixed skeleton from the swap surface), then the Lane 2 (AI in Class) skill to build the session. Keep all participant-facing language tool-agnostic — never name a specific AI tool; faculty choose their own. Deliver the session as one self-contained HTML file with a mode chooser, projector stage and participant workboard, per the framework's design system.
+
+This concept came out of a faculty intake. Treat the answers below as fixed inputs and do not re-ask them.
+
+== CUSTOMIZATION PASS (required) ==
+The concept below is template-written, so its phrasing is deliberately generic. Rewriting the language is part of the build:
+- Rephrase all template language in this field's own professional voice, using the subject nouns given below.
+- Vary how the topic is referred to; never echo one fixed topic phrase sentence after sentence.
+- Adapt the activity language to the working tool (Excel): tasks should read like real work in that tool. It is subject software, not an AI tool, so naming it in participant-facing text is required and is not a tool-agnosticism violation.
+- Keep the framework's build slots exactly as specified: tag, activity pattern, phases and timings, roles, planted error, anchor. Rewrite words, never structure.
+
+== FACULTY INTAKE ==
+Course: MKT-337: Market Research
+Topic / unit: survey data analysis
+Working tool: Excel
+What happens in class now: walk them through and practice exercise
+Subject: Marketing — write the session in this field's language, using its own nouns (a campaign, a positioning statement, a customer segment, a content calendar, a brand). Subject does not change the tag.
+Skill (the how): Perform a technique, procedure, or calculation with a right and wrong way
+Output (the thing): A decision, committed and defended — the activity language must suit both the skill and the output.
+Raw material state: messy on purpose — the sorting, cleaning, or vetting of the dataset is itself part of the work; make it an explicit early beat and do not hand teams a pre-tidied version.
+Raw material students work from: A dataset, results, or records (referred to throughout as "the dataset")
+Session length: 75 minutes | Class size: 12-25 | Teams of 4
+Students bring lived/professional experience: some
+Competing: Yes — against a real clock or a queue that does not wait
+How a student catches the planted error: By running it and seeing the result is wrong
+Faculty's worry about AI here: thinking
+What goes wrong most in student work now: it is wrong and unchecked — the failure by design should bite exactly here.
+Expert-only mistake to plant as the designed failure: the assessment of the questions that are driving the data are not aligned with the underlying mechanism. The underlying mechanism being that the underlying survey questions are assessing the same concept.
+What students should remember a year later: The analysis moment that allowed them to determine with confidence the credibility in their survey design.
+
+== CONFIRMED DESIGN DECISIONS ==
+Experience type: Research (participants verify AI's fluent, confident output against a real anchor and leave with a conclusion plus its evidence trail)
+WHAT AI IS CAST AS — "the beginner they have to train" (The Apprentice). This is the room’s engagement engine; write the session around it, capability first.
+  Where AI genuinely helps (lead with this): Follows instructions exactly, which is the fastest way to find out what your instructions actually said.
+  Where it runs out (students discover this, it is not announced): It fills gaps silently from training, so it hides omissions unless it is constrained.
+  The move students can name afterward: Specifying a procedure precisely enough that something else can execute it.
+ACTIVITY — "Execute and Verify" (chosen by the faculty member from the 5 activities carrying this tag). The pattern: AI produces output that looks right; students catch it by running it. Filled for this topic: AI produces something for survey data analysis that looks right. Teams run it against the dataset and find out that it is not. The working tool is Excel.
+Activity fits the raw material naturally: yes
+RESEARCH ENGINE — the three slots, all non-negotiable:
+  1. Anchor: the executed result — what actually happens when you run it
+  2. Planted error: the assessment of the questions that are driving the data are not aligned with the underlying mechanism. The underlying mechanism being that the underlying survey questions are assessing the same concept.
+  3. Evidence artifact: A verified result on survey data analysis: what AI produced, what happened when it was run, and the specific failure that only execution exposed.  (a conclusion plus its trail — never a summary)
+  Research pattern (by anchor): Execute and Verify. The center of this type is verification, not open-ended research.
+  Do not attach a clock as a mechanic: if the audit survives without the timer, it is Research, not Compete.
+How the activity runs:
+  (1) Teams start with the raw data on survey data analysis — working out what it actually measures and what has to be cleaned before it can be used at all.
+  (2) It does exactly what the team told it — and only that. Watching their own instructions execute is faster than any feedback a professor could give, because the gaps are suddenly visible.
+  (3) It quietly fills what they left out from its own training, which hides the omission. The constraint — use nothing I did not tell you — always leaks on the first try, and the dataset is where the leak shows.
+Runner-up considered: Compete
+AI visibility: embedded (this drops into an existing class, so the AI skill surfaces mainly in reflection) — Lane 2.
+Dominant literacy category: Critiquing AI and Recognizing AI | Secondary: Using AI
+Dominant pillar: Pillar 3 — Critical Evaluation | Secondary: Pillar 4 — Transparency and Attribution
+Baseline pillars, required: Pillar 2 Safe and Compliant Use — institutionally approved tools only, no real patient/client/student data entered; Pillar 4 Transparency and Attribution — the artifact carries a line stating what AI produced and what the team decided.
+Transferable AI skill: Specifying a procedure precisely enough that something else can execute it.
+Artifact: A verified result on survey data analysis: what AI produced, what happened when it was run, and the specific failure that only execution exposed.
+Wow moment: It does exactly what they said and it is still wrong — their own instructions, with the gaps visible.
+Failure by design: It over-performs by filling gaps from its own training, hiding the student's omissions.
+  Tie-in: Faculty's stated worry is students outsourcing the thinking. The role split is the countermeasure: the AI-facing role never makes the final call — a person does, on the record.
+Human contribution moment: Write the procedure. There is no way to fake understanding here.
+Share format: State the conclusion and its evidence trail, then the one thing AI was confidently wrong about and how the anchor caught it. Must work in a virtual classroom: screen-share plus one line in chat.
+Entry point — required: a laptop and the topic already being taught. Not required: any coding, any prior AI experience, any paid tool or account. Participants use an institutionally approved AI tool of their choice.
+Pacing flexibility — if short: halve the "Build the evidence trail" phase and cut sharing to three volunteers, everyone else submits one line. Never cut phase 2 ("Let AI run") or the reflection. If energy is high: teams trade artifacts and try to break each other's conclusion against the same anchor — a five-minute adversarial pass.
+
+== PHASES (50 / 75 / two-session columns; this brief is written for 75 minutes. Build the design system's 50/75 toggle from the first two columns) ==
+1. Set the anchor — 50min: 8 | 75min: 12 | 2-session: 14 — facilitator function: Name the real thing this session verifies against.
+     participant task: Open the dataset. Before anything else, name what each field actually measures, what is missing or miscoded, and what you would have to clean before trusting one conclusion from it.   [no unlock word; opening phase]
+2. Let AI run — 50min: 10 | 75min: 15 | 2-session: 18 — facilitator function: Get AI's fluent, confident output — before checking anything.
+     participant task: Write the procedure as if for someone who knows nothing, then have AI attempt it using only your words.   [unlock word: sweep]
+3. Verify against the anchor — 50min: 14 | 75min: 20 | 2-session: 24 — facilitator function: Check every claim against the anchor. Mark what fails.
+     participant task: Find where it succeeded by guessing rather than by your instruction. Constrain it against the dataset — use nothing I did not tell you — and run it again.   [unlock word: audit]
+4. Build the evidence trail — 50min: 10 | 75min: 16 | 2-session: 20 — facilitator function: Conclusion plus its trail — never a summary.
+     participant task: Rewrite the one instruction that leaked most, and note what understanding it was hiding.   [unlock word: trail]
+5. Present and reflect — 50min: 8 | 75min: 12 | 2-session: 14 — facilitator function: Conclusion, evidence, and the moment AI was confidently wrong.
+     participant task: Show the step it got right for the wrong reason, and the instruction you had to add.   [unlock word: present]
+
+== AI SKILL MOMENTS (what the facilitator watches for) ==
+1. Phase 2, when a team accepts fluent output without an anchor behind it -&gt; skill: Prompting for evidence rather than assertion -&gt; facilitator move: Ask them to re-prompt for what that specific sentence rests on. Let the room hear what comes back.
+2. Phase 3, the first time the anchor contradicts the claim -&gt; skill: Verifying against something real, not against plausibility -&gt; facilitator move: Put it on the projector. This is the highest-value sixty seconds in the session.
+3. Phase 3, when a team treats a confident tone as a credential -&gt; skill: Separating fluency from accuracy -&gt; facilitator move: Ask: how sure does it sound, and how sure should you be? Name the gap out loud.
+
+== ROLES (teams of 4, each with a named deliverable) ==
+1. Anchor keeper — owns the written anchor and the claim under test, in one sentence each
+2. Prompter — owns the prompt log: every prompt sent, in order
+3. Verifier — owns the verdict on each claim and the evidence behind it
+4. Reporter — owns the finished artifact: conclusion plus trail
+
+== REFLECTION ==
+1. Where was the AI confident and wrong, and what made you check that one?
+2. What is the difference between how fluent it sounded and how reliable it was?
+3. Name what the AI produced and what you decided. Which of the two mattered more to how this turned out?
+4. Where in your own work or study, in the next two weeks, could you use this exact move?
+Closing stem, every participant completes aloud or in writing: "The most useful thing I learned about working with AI today was ___, and I could use this when ___."
+
+== BUILD NOTES ==
+Session slug: survey-data-analysis  (broadcast channel snhu-survey-data-analysis-room, localStorage key snhu-survey-data-analysis-proto)
+Timing map: use the 50 and 75 columns above as the t50/t75 proportional map required by the design system. The third column is the two-session plan, for faculty planning only — do not add a third toggle.
+Faculty asked the session to avoid: not using python script to build the analysis, should be done with excel tools and the data analysis tool pack.
+Run the framework's quality checklist before you finish, including the Research-specific checks and both baseline pillar checks.
+Then produce, so a faculty member can run this cold: (A) the session HTML — mode chooser, projector stage and participant workboard; and (B) a single printable Faculty Run-Sheet that merges the one-sheet and the how-to-run into one document — session name and tag, the phase roadmap with timing, what students need (laptop + approved AI tool), the Workboard join link, and the artifact learners leave with, plus a short lead guide: the before-class setup checklist, the unlock-word list with when to reveal each, and a one-line SAY / DO per phase. Do not produce a PowerPoint deck or a separate Word/HTML runbook. Faculty choose their own AI tool, so do not build a tool-specific variant.</pre></div><div class="card" data-tab="sketch"><div class="eb">Draft sketch</div><h2>The session, in one page</h2><p class="lead">A template-written draft — the shape is decided, the words are placeholders. The build prompt above is what produces the finished, custom-written session.</p><dl class="kv"><dt>Course</dt><dd>MKT-337: Market Research · Marketing</dd><dt>Topic</dt><dd>survey data analysis</dd><dt>What happens now</dt><dd>walk them through and practice exercise</dd><dt>Core skill</dt><dd>Perform a technique, procedure, or calculation with a right and wrong way</dd><dt>What they produce</dt><dd>A decision, committed and defended</dd><dt>Raw material</dt><dd>A dataset, results, or records — messy on purpose; cleaning or vetting it is part of the work. Phase 1 opens on it: Open the dataset. Before anything else, name what each field actually measures, what is missing or miscoded, and what you would have to clean before trusting one conclusion from it.</dd><dt>Transferable skill</dt><dd>Specifying a procedure precisely enough that something else can execute it.</dd><dt>AI is cast as</dt><dd>The Apprentice — the beginner they have to train</dd><dt>Where AI helps</dt><dd>Follows instructions exactly, which is the fastest way to find out what your instructions actually said. <span class="muted-note">Where it runs out: It fills gaps silently from training, so it hides omissions unless it is constrained.</span></dd><dt>The anchor</dt><dd>the executed result — what actually happens when you run it. <span class="muted-note">Research runs on verification, not open-ended research — without a real anchor the session collapses into a summary.</span></dd><dt>The planted error</dt><dd>the assessment of the questions that are driving the data are not aligned with the underlying mechanism. The underlying mechanism being that the underlying survey questions are assessing the same concept. <span class="muted-note">Seed this deliberately. “AI is wrong in exactly this way” builds; “AI might be wrong” does not.</span></dd><dt>Artifact</dt><dd>A verified result on survey data analysis: what AI produced, what happened when it was run, and the specific failure that only execution exposed. <span class="muted-note">A conclusion plus its trail. Never a summary.</span></dd><dt>Wow moment</dt><dd>It does exactly what they said and it is still wrong — their own instructions, with the gaps visible.</dd><dt>Failure by design</dt><dd>It over-performs by filling gaps from its own training, hiding the student's omissions.<div class="callout" style="margin:10px 0 0"><div class="lbl">Plant this specific error</div><p>the assessment of the questions that are driving the data are not aligned with the underlying mechanism. The underlying mechanism being that the underlying survey questions are assessing the same concept.</p></div><div class="fac"><div class="lbl">Facilitator note</div>Faculty's stated worry is students outsourcing the thinking. The role split is the countermeasure: the AI-facing role never makes the final call — a person does, on the record.</div></dd><dt>Human contribution</dt><dd>Write the procedure. There is no way to fake understanding here.<div class="fac"><div class="lbl">Facilitator note</div>A handful have relevant experience. Seed one experienced student per team and make their input a named role deliverable.</div></dd><dt>Entry point</dt><dd>Required: a laptop and the topic you already teach. Not required: any coding, any prior AI experience, any paid tool or account. Students use an institutionally approved AI tool of their choice.</dd><dt>Share format</dt><dd>State the conclusion and its evidence trail, then the one thing AI was confidently wrong about and how the anchor caught it. Works in a virtual classroom: screen-share plus one line in chat.</dd><dt>Pillar 2 — safe use</dt><dd>Approved tools only. No real patient, client, student or employee data goes into any AI tool. If a student wants to use a non-approved tool, they pair with someone who is on an approved one.</dd><dt>Pillar 4 — attribution</dt><dd>The artifact carries one line: what AI produced, and what the team decided. Reflection question 3 asks for it out loud, in every version of this session.</dd><dt>Keep out of it</dt><dd>not using python script to build the analysis, should be done with excel tools and the data analysis tool pack.</dd></dl><h3>Phases</h3><table class="ph"><thead><tr><th>#</th><th style="width:19%">Phase</th><th>Min</th><th>What students do</th><th>Unlock word</th></tr></thead><tbody><tr><td class="mins">1</td><td><b>Set the anchor</b></td><td class="mins">12</td><td>Open the dataset. Before anything else, name what each field actually measures, what is missing or miscoded, and what you would have to clean before trusting one conclusion from it.</td><td class="word">—</td></tr><tr><td class="mins">2</td><td><b>Let AI run</b></td><td class="mins">15</td><td>Write the procedure as if for someone who knows nothing, then have AI attempt it using only your words.</td><td class="word">sweep</td></tr><tr><td class="mins">3</td><td><b>Verify against the anchor</b></td><td class="mins">20</td><td>Find where it succeeded by guessing rather than by your instruction. Constrain it against the dataset — use nothing I did not tell you — and run it again.</td><td class="word">audit</td></tr><tr><td class="mins">4</td><td><b>Build the evidence trail</b></td><td class="mins">16</td><td>Rewrite the one instruction that leaked most, and note what understanding it was hiding.</td><td class="word">trail</td></tr><tr><td class="mins">5</td><td><b>Present and reflect</b></td><td class="mins">12</td><td>Show the step it got right for the wrong reason, and the instruction you had to add.</td><td class="word">present</td></tr></tbody></table><h3>Roles — teams of 4</h3><ol class="rl"><li><b>Anchor keeper</b> — owns the written anchor and the claim under test, in one sentence each</li><li><b>Prompter</b> — owns the prompt log: every prompt sent, in order</li><li><b>Verifier</b> — owns the verdict on each claim and the evidence behind it</li><li><b>Reporter</b> — owns the finished artifact: conclusion plus trail</li></ol><h3>AI skill moments — what to watch for</h3><table class="ph"><thead><tr><th style="width:31%">When it happens</th><th style="width:23%">The skill</th><th>What you do</th></tr></thead><tbody><tr><td>Phase 2, when a team accepts fluent output without an anchor behind it</td><td><b>Prompting for evidence rather than assertion</b></td><td>Ask them to re-prompt for what that specific sentence rests on. Let the room hear what comes back.</td></tr><tr><td>Phase 3, the first time the anchor contradicts the claim</td><td><b>Verifying against something real, not against plausibility</b></td><td>Put it on the projector. This is the highest-value sixty seconds in the session.</td></tr><tr><td>Phase 3, when a team treats a confident tone as a credential</td><td><b>Separating fluency from accuracy</b></td><td>Ask: how sure does it sound, and how sure should you be? Name the gap out loud.</td></tr></tbody></table><h3>Reflection</h3><ol class="rl"><li>Where was the AI confident and wrong, and what made you check that one?</li><li>What is the difference between how fluent it sounded and how reliable it was?</li><li>Name what the AI produced and what you decided. Which of the two mattered more to how this turned out?</li><li>Where in your own work or study, in the next two weeks, could you use this exact move?</li></ol><div class="stem">Closing stem, everyone completes it: “The most useful thing I learned about working with AI today was ___, and I could use this when ___.”</div><div class="callout"><div class="lbl">Say this at the close</div><p>The analysis moment that allowed them to determine with confidence the credibility in their survey design.</p></div><h3>Pacing</h3><p class="lead" style="margin:0 0 8px"><b>If time runs short:</b> halve the “Build the evidence trail” phase and cut sharing to three volunteers, everyone else submits one line. Never cut phase 2 (“Let AI run”) or the reflection — the wow moment and the skill live there.</p><p class="lead" style="margin:0"><b>If energy is high:</b> teams trade artifacts and try to break each other's conclusion against the same anchor — a five-minute adversarial pass.</p></div></div><!-- SESSION-SKETCH-LOG: [{"t":1786992847564,"e":"derived","job":"apprentice","tag":"lab","skill":"perform","output":"decision","worry":"thinking"}] --></body></html>

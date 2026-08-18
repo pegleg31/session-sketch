@@ -1,0 +1,158 @@
+/* ============================================================
+   Wave 3 — conversational portal layer.
+   Reuses the brand tokens and result styles already in <head>.
+   The intake is a self-contained chat WINDOW: a bounded card
+   with a titlebar, an internally-scrolling message area, and a
+   review panel that slides over the window. The finished concept
+   renders full-width below the window, as a document.
+   ============================================================ */
+
+/* ---------- the chat window ---------- */
+.stage{max-width:880px;margin:0 auto;padding:24px 24px 64px}
+.chatwin{position:relative;overflow:hidden;display:flex;flex-direction:column;
+  height:min(74vh,720px);min-height:460px;
+  background:#fff;border:1px solid var(--line);border-radius:10px}
+
+.wintop{display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+  padding:10px 15px;background:var(--ink-blue);color:#fff;border-bottom:3px solid var(--gold)}
+.winmark{width:26px;height:26px;flex:0 0 26px;border:1.5px solid rgba(255,255,255,.55);
+  border-radius:5px;display:flex;align-items:center;justify-content:center}
+.winmark svg{display:block}
+.wintitle{font-size:13.5px;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
+.winmeta{font-size:12px;color:var(--dim-on-navy);min-width:0;display:flex;gap:7px;
+  align-items:center;flex-wrap:wrap;overflow:hidden}
+.winmeta b{color:#fff;font-weight:700}
+.winmeta .dot{color:rgba(255,255,255,.35)}
+.winmeta .none{color:var(--dim-on-navy);opacity:.85}
+.winprog{margin-left:auto;display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.pbar{width:108px;height:7px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--gold);transition:width .25s ease}
+.pcount{font-size:11.5px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+.drawerBtn{font-family:inherit;font-size:11.5px;font-weight:700;border:1px solid rgba(255,255,255,.5);
+  background:transparent;color:#fff;border-radius:var(--radius);padding:6px 11px;cursor:pointer;
+  white-space:nowrap;flex:0 0 auto}
+.drawerBtn:hover{background:rgba(255,255,255,.12)}
+.drawerBtn.on{background:var(--gold);color:var(--ink-blue);border-color:var(--gold)}
+@media (max-width:640px){.pbar{width:60px}.winmeta{font-size:11px}.wintitle{font-size:12.5px}}
+
+.winbody{flex:1 1 auto;overflow-y:auto;padding:20px 18px 24px;background:var(--panel-tint);
+  scroll-behavior:smooth;overflow-anchor:none}
+
+/* ---------- messages ---------- */
+.turn{margin:0 0 16px}
+.bot{display:flex;gap:10px;align-items:flex-start}
+.ava{flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:var(--ink-blue);
+  display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ava svg{display:block}
+.bub{background:#fff;border:1px solid var(--line);border-radius:3px 13px 13px 13px;padding:11px 14px;
+  max-width:82%;font-size:14px;line-height:1.5;color:var(--warm-black)}
+.bub .qh2{display:block;margin-top:6px;font-size:12px;color:var(--muted);line-height:1.45}
+.whyq{margin-top:8px}
+.whyq>summary{list-style:none;cursor:pointer;font-size:11.5px;font-weight:700;color:var(--impact-blue);
+  display:inline-flex;align-items:center;gap:5px;user-select:none}
+.whyq>summary::-webkit-details-marker{display:none}
+.whyq>summary::before{content:"\24D8";font-size:12px}
+.whyq[open]>summary{margin-bottom:5px}
+.whyq>p{margin:0;font-size:12px;line-height:1.5;color:var(--muted);
+  background:var(--panel-tint);border-left:2px solid var(--gold);border-radius:0 var(--radius) var(--radius) 0;padding:8px 11px}
+.bub b{color:var(--ink-blue)}
+.bub i{color:var(--warm-brown)}
+.pbnote{display:block;margin-top:8px;font-size:12px;color:var(--warm-brown);font-style:normal}
+
+.usr{display:flex;justify-content:flex-end;margin-top:8px}
+.ubub{background:var(--soft-blue);border:1px solid #cfe0f2;border-radius:13px 13px 4px 13px;
+  padding:8px 13px;max-width:78%;font-size:13.5px;line-height:1.45;color:var(--ink-blue);
+  cursor:pointer;position:relative}
+.ubub:hover{border-color:var(--impact-blue)}
+.ubub.skip{color:var(--placeholder);font-style:italic}
+.pen{margin-left:9px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--impact-blue);opacity:0;transition:opacity .12s}
+.ubub:hover .pen{opacity:1}
+
+/* ---------- active input ---------- */
+.ans{margin:11px 0 2px 38px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:inherit;font-size:13.5px;font-weight:600;background:#fff;border:1px solid var(--line);
+  color:var(--ink-blue);border-radius:99px;padding:8px 15px;cursor:pointer;line-height:1.3}
+.chip:hover{border-color:var(--impact-blue);background:var(--panel-tint)}
+.chip.sel{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
+.optc{display:block;width:100%;text-align:left;font-family:inherit;background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:11px 14px;cursor:pointer;margin-bottom:8px;font-size:13.5px;
+  line-height:1.4;color:var(--warm-black)}
+.optc:hover{border-color:var(--impact-blue);background:var(--panel-tint)}
+.optc.sel{background:var(--soft-blue);border-color:var(--impact-blue)}
+.optc b{color:var(--ink-blue)}
+.optc .ex{display:block;margin-top:3px;font-size:11.5px;color:var(--muted);font-weight:400}
+.optgrid{display:grid;gap:0}
+
+.compose{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.compose input[type=text],.compose textarea{flex:1 1 240px;font-family:inherit;font-size:14px;
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;color:var(--warm-black)}
+.compose textarea{min-height:66px;resize:vertical;line-height:1.5}
+.compose input:focus,.compose textarea:focus{outline:2px solid var(--impact-blue);outline-offset:-1px}
+.send{font-family:inherit;font-size:13px;font-weight:700;background:var(--gold);color:var(--ink-blue);
+  border:1px solid var(--gold);border-radius:var(--radius);padding:10px 18px;cursor:pointer;flex:0 0 auto}
+.send:hover{background:#ffc93c}
+.skip{font-family:inherit;font-size:12.5px;font-weight:700;background:#fff;color:var(--muted);
+  border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;cursor:pointer;flex:0 0 auto}
+.skip:hover{border-color:var(--impact-blue);color:var(--ink-blue)}
+
+.pbrow{display:flex;gap:9px;flex-wrap:wrap}
+.pbyes{font-family:inherit;font-size:13px;font-weight:700;background:var(--gold);color:var(--ink-blue);
+  border:1px solid var(--gold);border-radius:99px;padding:8px 18px;cursor:pointer}
+.pbyes:hover{background:#ffc93c}
+.pbfix{font-family:inherit;font-size:13px;font-weight:600;background:#fff;color:var(--ink-blue);
+  border:1px solid var(--line);border-radius:99px;padding:8px 16px;cursor:pointer}
+.pbfix:hover{border-color:var(--impact-blue);background:var(--panel-tint)}
+
+/* ---------- review panel (overlays the window) ---------- */
+.windrawer{position:absolute;inset:0;z-index:10;background:#fff;display:none;flex-direction:column}
+.windrawer.open{display:flex}
+.dwtop{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.dwt{font-size:13.5px;font-weight:800;color:var(--ink-blue)}
+.dwdone{margin-left:auto;font-family:inherit;font-size:12px;font-weight:700;background:var(--ink-blue);
+  color:#fff;border:1px solid var(--ink-blue);border-radius:var(--radius);padding:7px 15px;cursor:pointer}
+.dwdone:hover{background:#001838}
+.dwlist{flex:1 1 auto;overflow-y:auto;padding:2px 10px 14px}
+.dhead{font-size:11.5px;color:var(--muted);padding:11px 4px 6px}
+.drow{border-top:1px solid var(--line-soft);padding:11px 4px}
+.drow:first-child{border-top:none}
+.drow.hot{background:var(--soft-blue);border-radius:var(--radius);padding-left:10px;padding-right:10px}
+.drow .dl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.drow .dctl{display:block}
+
+/* ---------- finished concept: its own tabbed page (swaps in for the chat) ---------- */
+#result{display:none}
+body.resultview .stage{display:none}
+body.resultview #result{display:block}
+.rpage-in{max-width:1000px;margin:0 auto;padding:0 24px 64px}
+
+.rhead{position:sticky;top:0;z-index:20;background:var(--parchment);padding:16px 0 0;
+  margin:0 0 4px}
+.rhead-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.rttl{font-size:16px;font-weight:800;color:var(--ink-blue);letter-spacing:-.01em;
+  display:flex;align-items:center;gap:9px;min-width:0}
+.rtag{display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:var(--ink-blue);
+  border-radius:var(--radius);padding:4px 10px;font-size:12px;font-weight:800;flex:0 0 auto}
+.rtag svg{display:block}
+.rhead-btns{margin-left:auto;display:flex;gap:8px;flex:0 0 auto}
+.btn-back{font-family:inherit;font-size:12.5px;font-weight:700;background:#fff;
+  color:var(--ink-blue);border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;
+  cursor:pointer;flex:0 0 auto;white-space:nowrap}
+.btn-back:hover{background:var(--panel-tint);border-color:var(--impact-blue)}
+.rtabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line)}
+.rtab{appearance:none;background:none;border:none;font-family:inherit;cursor:pointer;
+  padding:11px 16px;border-bottom:3px solid transparent;color:var(--muted);
+  font-size:13px;font-weight:700;white-space:nowrap}
+.rtab:hover{color:var(--ink-blue)}
+.rtab.on{color:var(--ink-blue);border-bottom-color:var(--gold)}
+.rpane{padding-top:6px}
+.rpane[hidden]{display:none}
+.rfooter{margin-top:8px}
+
+@media print{
+  .mast,.mast-actions,.chatwin,.rhead,.rfooter{display:none!important}
+  body.resultview .stage{display:none}
+  .rpage-in{max-width:none;padding:0}
+  .rpane[hidden]{display:block!important}   /* print every tab, not just the open one */
+}

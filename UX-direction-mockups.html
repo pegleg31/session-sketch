@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session Sketch — three interface directions</title>
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root{
+  --ink-blue:#00244e; --gold:#fdb913; --heritage:#0a3370; --sky-blue:#009dea;
+  --impact-blue:#00559a; --parchment:#f4f0ec; --soft-blue:#e6f0f7; --warm-brown:#a55b00;
+  --panel-tint:#faf7f3; --warm-black:#1d1c18; --line:#d9d2c7; --line-soft:#e2ddd5;
+  --muted:#5b6b7c; --placeholder:#8b9bad; --dim-on-navy:#cfe0f2; --radius:4px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Inter',Arial,sans-serif;background:var(--parchment);color:var(--warm-black);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px 80px}
+header.mast{background:var(--ink-blue);color:#fff;border-bottom:3px solid var(--gold);padding:20px 0}
+.mast-in{max-width:1100px;margin:0 auto;padding:0 24px}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1{margin:2px 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
+.mast p{margin:0;font-size:13px;color:var(--dim-on-navy);max-width:78ch}
+h2{font-size:20px;font-weight:800;color:var(--ink-blue);letter-spacing:-.01em;margin:0 0 4px}
+.dirhead{margin:44px 0 10px}
+.dirhead .eb{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--warm-brown);margin-bottom:4px}
+.dirhead p{margin:4px 0 0;color:var(--muted);font-size:13.5px;max-width:80ch}
+.frame{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:14px 0 10px}
+.chrome{background:var(--panel-tint);border-bottom:1px solid var(--line);padding:8px 14px;display:flex;gap:6px;align-items:center}
+.chrome i{width:10px;height:10px;border-radius:50%;background:var(--line);display:block}
+.chrome span{font-size:11px;color:var(--placeholder);margin-left:8px}
+.stage{padding:26px 28px;background:var(--parchment)}
+.tradeoff{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 8px}
+.tradeoff .t{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:11px 14px;font-size:12.5px}
+.tradeoff .lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.tradeoff .win .lbl{color:var(--impact-blue)}
+.tradeoff .cost .lbl{color:var(--warm-brown)}
+@media (max-width:760px){.tradeoff{grid-template-columns:1fr}}
+
+/* ---------- A · conversational ---------- */
+.chat{max-width:620px;margin:0 auto}
+.msg{display:flex;margin:0 0 14px}
+.msg .bub{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 15px;font-size:13.5px;max-width:78%}
+.msg.bot .bub{border-left:3px solid var(--gold)}
+.msg.me{justify-content:flex-end}
+.msg.me .bub{background:var(--soft-blue);border-color:var(--impact-blue);font-weight:600}
+.msg .hint{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:5px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 16px;padding-left:6px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--ink-blue)}
+.chip.sel{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
+.typing{display:inline-flex;gap:4px;align-items:center;padding:4px 2px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--placeholder);display:block}
+.inbar{display:flex;gap:8px;max-width:620px;margin:6px auto 0}
+.inbar input{flex:1;font-family:inherit;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:11px 13px;color:var(--warm-black)}
+.inbar button{font-family:inherit;font-size:12.5px;font-weight:700;background:var(--gold);color:var(--ink-blue);border:none;border-radius:var(--radius);padding:0 18px;cursor:default}
+.crumb{max-width:620px;margin:0 auto 18px;font-size:11px;color:var(--placeholder);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.crumb b{color:var(--warm-brown)}
+
+/* ---------- B · wizard + live preview ---------- */
+.split{display:grid;grid-template-columns:1.25fr .95fr;gap:18px}
+@media (max-width:820px){.split{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.card.hero{border-top:3px solid var(--gold)}
+.q{margin:0 0 16px}
+.qt{display:block;font-size:13.5px;font-weight:700;color:var(--ink-blue);margin-bottom:2px}
+.qh{font-size:12px;color:var(--muted);margin:0 0 8px}
+.fake-input,.fake-select{background:var(--panel-tint);border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;font-size:13px}
+.fake-select{display:flex;justify-content:space-between;color:var(--warm-black)}
+.fake-select:after{content:"▾";color:var(--ink-blue)}
+.fake-input .ph{color:var(--placeholder)}
+.opt{display:flex;gap:9px;align-items:flex-start;background:var(--panel-tint);border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;font-size:12.5px;margin-bottom:6px}
+.opt .r{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--placeholder);flex:0 0 13px;margin-top:2px}
+.opt.sel{background:var(--soft-blue);border-color:var(--impact-blue)}
+.opt.sel .r{border-color:var(--impact-blue);background:radial-gradient(circle at center,var(--impact-blue) 0 4px,transparent 4.5px)}
+.prev{position:relative}
+.prev .eb{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--warm-brown);margin-bottom:8px}
+.prev h3{margin:0 0 2px;font-size:17px;font-weight:800;color:var(--ink-blue)}
+.leader{display:flex;align-items:center;gap:8px;margin:10px 0 4px;font-size:12px}
+.leader .bar{flex:1;height:8px;background:var(--panel-tint);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.leader .bar i{display:block;height:100%}
+.leader.l1 .bar i{width:72%;background:var(--gold)}
+.leader.l2 .bar i{width:22%;background:var(--heritage)}
+.leader.l3 .bar i{width:14%;background:var(--sky-blue)}
+.leader .nm{width:74px;font-weight:600}
+.leader .v{width:30px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.slotlist{margin:12px 0 0;padding:0;list-style:none;font-size:12.5px}
+.slotlist li{padding:7px 0;border-top:1px solid var(--line-soft);display:flex;gap:8px}
+.slotlist .ok{color:var(--impact-blue);font-weight:700}
+.slotlist .wait{color:var(--placeholder)}
+.prevnote{background:var(--soft-blue);border-radius:var(--radius);padding:9px 12px;font-size:12px;margin-top:12px}
+.prevnote b{color:var(--impact-blue)}
+
+/* ---------- C · flatter, progressive ---------- */
+.acc{max-width:680px;margin:0 auto}
+.sec{background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.sec .head{display:flex;align-items:center;gap:12px;padding:13px 16px;font-size:13.5px}
+.sec .n{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:0 0 22px}
+.sec.done .n{background:var(--heritage);color:#fff}
+.sec.on .n{background:var(--gold);color:var(--ink-blue)}
+.sec.todo .n{border:1.5px solid var(--line);color:var(--placeholder)}
+.sec .ttl{font-weight:700;color:var(--ink-blue)}
+.sec.todo .ttl{color:var(--muted);font-weight:600}
+.sec .sum{margin-left:auto;font-size:12px;color:var(--muted);text-align:right}
+.sec .sum b{color:var(--warm-black)}
+.sec .edit{font-size:11.5px;font-weight:700;color:var(--impact-blue);margin-left:14px}
+.sec .body{border-top:1px solid var(--line-soft);padding:16px;background:#fff}
+.sec.on{border-color:var(--impact-blue)}
+.clusters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:640px){.clusters{grid-template-columns:1fr}}
+.cluster{background:var(--panel-tint);border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px}
+.cluster.sel{background:var(--soft-blue);border-color:var(--impact-blue)}
+.cluster .cn{font-size:13px;font-weight:800;color:var(--ink-blue);margin-bottom:2px}
+.cluster .ce{font-size:11.5px;color:var(--muted)}
+.subkinds{margin-top:12px}
+.subkinds .kk{display:flex;gap:9px;align-items:flex-start;background:var(--panel-tint);border:1px solid var(--line);border-radius:var(--radius);padding:8px 11px;margin-bottom:6px;font-size:12.5px}
+.subkinds .kk .r{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--placeholder);flex:0 0 13px;margin-top:2px}
+.subkinds .kk.sel{background:var(--soft-blue);border-color:var(--impact-blue)}
+.subkinds .kk.sel .r{border-color:var(--impact-blue);background:radial-gradient(circle at center,var(--impact-blue) 0 4px,transparent 4.5px)}
+.subkinds .kk em{display:block;font-style:normal;font-size:11px;color:var(--muted)}
+.whyq{font-size:11.5px;color:var(--impact-blue);font-weight:700;margin-left:6px;cursor:default}
+footer{margin-top:56px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<header class="mast"><div class="mast-in">
+  <div class="eyebrow">SNHU AI Labs · Session Sketch</div>
+  <h1>Three interface directions, same intake</h1>
+  <p>The same moment in the same Joins intake, rendered three ways. The engine, questions, and scoring do not change between them — only how the faculty member moves through it. Scroll all three, then pick the one to prototype for real.</p>
+</div></header>
+<div class="wrap">
+
+<!-- ============ A ============ -->
+<div class="dirhead">
+  <div class="eb">Direction A</div>
+  <h2>Conversational — one question at a time</h2>
+  <p>Feels like a design conversation, not a form. Each answer is acknowledged before the next question, examples appear inside the question, and typed answers can be gently played back ("so the topic is joins — the unit is databases, yes?").</p>
+</div>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>Session Sketch</span></div>
+<div class="stage">
+  <div class="crumb">Your class · question 3 of 8 · <b>Computing &amp; Software</b> · CIS-255</div>
+  <div class="chat">
+    <div class="msg bot"><div class="bub">What's the <b>topic</b> this Lab would live in? One unit is too big — narrow wins.
+      <span class="hint">If the unit is <b>database design</b>, the topic might be <b>joins</b>. If the unit is <b>data structures</b>, the topic might be <b>hash collisions</b>.</span></div></div>
+    <div class="msg me"><div class="bub">Writing joins with MySQL</div></div>
+    <div class="msg bot"><div class="bub">Got it — joins, worked in MySQL. I'll treat <b>joins</b> as the topic and remember MySQL as the tool your students use.
+      <span class="hint">That keeps the concept about the skill, and the activity language can still speak MySQL.</span></div></div>
+    <div class="msg bot"><div class="bub">What <b>kind of thing</b> is joins? Pick the closest.</div></div>
+    <div class="chips">
+      <span class="chip sel">A technique with a right and wrong way</span>
+      <span class="chip">A working build</span>
+      <span class="chip">A calculation</span>
+      <span class="chip">Show all 18…</span>
+    </div>
+    <div class="msg bot"><div class="bub"><span class="typing"><i></i><i></i><i></i></span></div></div>
+  </div>
+  <div class="inbar"><input placeholder="Type an answer, or tap a chip…"><button>Send</button></div>
+</div></div>
+<div class="tradeoff">
+  <div class="t win"><div class="lbl">What it buys</div>Zero wall-of-form. Every question gets full attention, examples live in-line, and playback ("so the topic is…") catches misreads like the audience question before they poison the result. Closest fit if AI ever moves into the loop — the conversation is already the shape of that.</div>
+  <div class="t cost"><div class="lbl">What it costs</div>Slowest path through; no skimming ahead; hard to revise an early answer without scrolling history. Faculty can't see how much is left, and a facilitator can't point at the whole page. Most new build effort of the three.</div>
+</div>
+
+<!-- ============ B ============ -->
+<div class="dirhead">
+  <div class="eb">Direction B</div>
+  <h2>Guided wizard + live preview</h2>
+  <p>Keeps the current steps, but the right rail shows the concept taking shape as answers land — which tag is leading, which build slots are filled, what's still missing. The tool's reasoning becomes visible without exposing raw scores to game.</p>
+</div>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>Session Sketch — step 1 of 4</span></div>
+<div class="stage">
+  <div class="split">
+    <div class="card hero">
+      <div class="q"><span class="qt">What subject is this?</span>
+        <div class="fake-select">Computing &amp; Software</div></div>
+      <div class="q"><span class="qt">The topic this Lab would live in</span>
+        <p class="qh">If the unit is <b>database design</b>, the topic might be <b>joins</b> · if the unit is <b>data structures</b>, try <b>hash collisions</b></p>
+        <div class="fake-input">joins</div></div>
+      <div class="q"><span class="qt">Is there a specific tool students use for this?</span>
+        <div class="fake-input">MySQL</div></div>
+      <div class="q"><span class="qt">What kind of thing is joins?</span>
+        <div class="opt sel"><span class="r"></span><span><b>A technique or procedure</b> with a right and wrong way — SQL joins · a normalization pass · debugging by bisection</span></div>
+        <div class="opt"><span class="r"></span><span><b>A working build</b> — code · a query · an app · a test suite</span></div>
+        <div class="opt"><span class="r"></span><span>16 more…</span></div>
+      </div>
+    </div>
+    <div class="card prev">
+      <div class="eb">Your Lab so far</div>
+      <h3>Verify It: joins</h3>
+      <div class="leader l1"><span class="nm">Research</span><span class="bar"><i></i></span><span class="v">7.5</span></div>
+      <div class="leader l2"><span class="nm">Create</span><span class="bar"><i></i></span><span class="v">2.0</span></div>
+      <div class="leader l3"><span class="nm">Simulate</span><span class="bar"><i></i></span><span class="v">1.0</span></div>
+      <ul class="slotlist">
+        <li><span class="ok">✓</span> Subject vocabulary — queries, schemas, row counts</li>
+        <li><span class="ok">✓</span> Topic — joins, worked in MySQL</li>
+        <li><span class="ok">✓</span> Topic kind — a technique, checked by doing</li>
+        <li><span class="wait">○</span> Raw material — decides how the Lab opens</li>
+        <li><span class="wait">○</span> The planted error — nothing builds without it</li>
+      </ul>
+      <div class="prevnote"><b>Leaning Research</b> — a technique with a right answer usually verifies by executing. Two answers could still change this.</div>
+    </div>
+  </div>
+</div></div>
+<div class="tradeoff">
+  <div class="t win"><div class="lbl">What it buys</div>Trust — faculty watch the recommendation earn itself instead of receiving a verdict. The "still missing" list kills the not-ready surprise at the end. Cheapest to build: the engine already computes everything the rail shows, and the current wizard survives intact.</div>
+  <div class="t cost"><div class="lbl">What it costs</div>A leading tag shown early can anchor people — some will steer answers toward it (mitigate: show direction, not numbers, until step 2). Denser screen; the rail competes with the questions on a laptop, stacks awkwardly on a phone.</div>
+</div>
+
+<!-- ============ C ============ -->
+<div class="dirhead">
+  <div class="eb">Direction C</div>
+  <h2>Flatter — one page, progressive disclosure</h2>
+  <p>No steps at all. Sections open one at a time on a single page; answered sections collapse to a one-line summary that stays editable. The 18 kinds become a two-step (cluster, then kind) so no screen ever shows more than ~6 choices. Helper text hides behind "why?".</p>
+</div>
+<div class="frame"><div class="chrome"><i></i><i></i><i></i><span>Session Sketch — one page</span></div>
+<div class="stage">
+  <div class="acc">
+    <div class="sec done"><div class="head"><span class="n">✓</span><span class="ttl">Your class</span>
+      <span class="sum"><b>CIS-255</b> · joins · MySQL · Computing &amp; Software</span><span class="edit">Edit</span></div></div>
+    <div class="sec on"><div class="head"><span class="n">2</span><span class="ttl">What kind of thing is joins?</span><span class="whyq">why?</span></div>
+      <div class="body">
+        <div class="clusters">
+          <div class="cluster sel"><div class="cn">Done correctly or incorrectly</div><div class="ce">techniques · calculations · standards</div></div>
+          <div class="cluster"><div class="cn">Something people navigate</div><div class="ce">situations · live interactions</div></div>
+          <div class="cluster"><div class="cn">Understood or argued about</div><div class="ce">claims · texts · events</div></div>
+          <div class="cluster"><div class="cn">Built or designed</div><div class="ce">briefs · builds · plans</div></div>
+        </div>
+        <div class="subkinds">
+          <div class="kk sel"><span class="r"></span><span><b>A technique or procedure</b> with a right and wrong way<em>SQL joins · a normalization pass · debugging by bisection</em></span></div>
+          <div class="kk"><span class="r"></span><span><b>A calculation or model</b> that produces a number<em>algorithm complexity · a load estimate</em></span></div>
+          <div class="kk"><span class="r"></span><span><b>A regulation or standard</b> that must be applied<em>coding standards · an API contract</em></span></div>
+          <div class="kk"><span class="r"></span><span><b>A tool or platform</b> to be operated<em>an IDE · version control · a CI pipeline</em></span></div>
+        </div>
+      </div></div>
+    <div class="sec todo"><div class="head"><span class="n">3</span><span class="ttl">What students have in front of them</span></div></div>
+    <div class="sec todo"><div class="head"><span class="n">4</span><span class="ttl">What good looks like</span></div></div>
+    <div class="sec todo"><div class="head"><span class="n">5</span><span class="ttl">The things only you know</span></div></div>
+  </div>
+</div></div>
+<div class="tradeoff">
+  <div class="t win"><div class="lbl">What it buys</div>Lowest reading load per moment — page 1's eight questions stop being a wall. Collapsed summaries make revising any answer one click, and the whole intake is visible as a map. Prints and projects well; friendly on a phone.</div>
+  <div class="t cost"><div class="lbl">What it costs</div>The two-step kind picker hides fourteen kinds — pick the wrong cluster and the right kind is never seen (the reason Option C-all-visible won last time). No sense of the concept forming until the end. Long single page can still feel long.</div>
+</div>
+
+<footer>Wireframe fidelity only — nothing here is functional. Directions can combine: B's live-preview rail fits inside C's one-page flow; A's playback line ("so the topic is joins, worked in MySQL") can be added to any of them.</footer>
+</div>
+</body>
+</html>
