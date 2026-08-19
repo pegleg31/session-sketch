@@ -17,3 +17,6 @@ node_modules/
 # never commit credentials — the API key lives only in Vercel env vars
 .env
 .env.*
+
+# local Claude Code session config
+.claude/
