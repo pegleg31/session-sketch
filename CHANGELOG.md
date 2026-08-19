@@ -49,6 +49,7 @@ builds so far:
 |---|---|---|
 | `5.0.0-dev` | 18 Aug | Wave 7 first pass — idea generator inside the old tabbed page, button-triggered |
 | `5.0.0-dev.2` | 18 Aug | Wave 7 second pass — three-layer page, auto-generation, §7 wording, Workshop view toggle |
+| `5.0.0-dev.3` | 18 Aug | Fix: first real generation hit Vercel's 60s function ceiling (HTTP 504) — `maxDuration` raised to 300s; busy copy says "a minute or two" |
 
 Bump the `VERSION` constant at the top of `build-ideas-inline.js` on every
 deployed build; drop the `-dev` suffix at release.

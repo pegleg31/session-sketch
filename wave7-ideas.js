@@ -555,7 +555,7 @@ function ideasHTML(c){
   }
   if (ideasBusy || ideasMaybeAuto(c, sig)){
     h += '<h2>Writing three ideas…</h2>';
-    h += '<p class="lead">Three activity ideas for ' + esc(c.topicShort) + ' — each with an invented situation, a different job for AI, and the exact file to build. Usually under a minute; leave the page open.</p>';
+    h += '<p class="lead">Three activity ideas for ' + esc(c.topicShort) + ' — each with an invented situation, a different job for AI, and the exact file to build. This is real writing and usually takes a minute or two; leave the page open.</p>';
     h += '<div class="noprint"><button class="btn btn-ink" disabled>Writing…</button></div>';
   } else if (I){
     h += '<h2>' + I.ideas.length + (I.ideas.length === 1 ? ' idea' : ' ideas') + ' for this class</h2>';

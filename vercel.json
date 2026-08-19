@@ -4,6 +4,6 @@
     { "source": "/wizard", "destination": "/Session-Sketch.html" }
   ],
   "functions": {
-    "api/ideas.js": { "maxDuration": 60 }
+    "api/ideas.js": { "maxDuration": 300 }
   }
 }
