@@ -18,6 +18,12 @@
    count moved off 8 — the harnesses depend on both. */
 var fs = require("fs");
 
+/* THE version. Bump the .dev counter on every build that gets deployed or
+   handed to anyone — two builds must never share a version string, or the
+   feedback they send back can't be told apart. Drop the -dev suffix at
+   release and move the CHANGELOG's Unreleased section under it. */
+var VERSION = "5.0.0-dev.2";
+
 var FILE = "Session-Sketch.html";
 var s = fs.readFileSync(FILE, "utf8");
 var before = s.length;
@@ -120,10 +126,18 @@ if(s.indexOf(W7START) > -1){
 }
 
 /* ---------- 3. SKETCH_VERSION ---------- */
-rep("3a. SKETCH_VERSION constant in the state block",
-  'var KEY = "snhu-session-sketch-v2";',
-  'var SKETCH_VERSION = "5.0.0-dev";   /* footer, saved files, new log entries; bump at release (see CHANGELOG.md) */\n' +
-  'var KEY = "snhu-session-sketch-v2";');
+/* version-bump aware: replaces an existing constant when VERSION moved,
+   inserts it on a fresh file, skips when already current */
+var VLINE = 'var SKETCH_VERSION = "' + VERSION + '";   /* set by build-ideas-inline.js — bump VERSION there, never here (see CHANGELOG.md) */';
+var VRE = /var SKETCH_VERSION = "[^"]+";[^\n]*/;
+if(VRE.test(s)){
+  if(s.match(VRE)[0] === VLINE) skipped.push("3a. SKETCH_VERSION already " + VERSION);
+  else { s = s.replace(VRE, VLINE); applied.push("3a. SKETCH_VERSION bumped to " + VERSION); }
+} else {
+  rep("3a. SKETCH_VERSION constant in the state block",
+    'var KEY = "snhu-session-sketch-v2";',
+    VLINE + '\nvar KEY = "snhu-session-sketch-v2";');
+}
 
 /* on a fresh file this adds the version line so 4b's tail anchor matches;
    once 4b has run, the version line lives inside _tail and this must skip */

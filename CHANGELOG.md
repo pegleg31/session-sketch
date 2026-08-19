@@ -26,22 +26,34 @@ release. The mapping:
 | `Session-Sketch-v4-2026-08-12.html` | just before Wave 2 landed | 2.1.0 |
 | `Session-Sketch-v5-2026-08-18.html` | just before Wave 6 landed | 4.0.0 |
 
-**Going forward:** the folder is moving to GitHub. Tag releases there
-(`git tag v4.0.0`) and stop minting snapshot files — keep the five existing
-ones forever as the pre-git record. The version bump rule used below: **major**
-when scoring, the intake questions, or the stored-state schema change (a saved
-concept or regression case could read differently); **minor** for new surfaces
-and content; nothing smaller is tracked.
+**Going forward:** the repo lives at `github.com/pegleg31/session-sketch`;
+Vercel deploys `main` on push. Tag releases (`git tag v5.0.0`) and stop
+minting snapshot files — keep the five existing ones forever as the pre-git
+record. The version bump rule used below: **major** when scoring, the intake
+questions, or the stored-state schema change (a saved concept or regression
+case could read differently); **minor** for new surfaces and content.
+**Between releases, every deployed build bumps the `-dev.N` counter** —
+`SKETCH_VERSION` is set in one place, the `VERSION` constant at the top of
+`build-ideas-inline.js`. Two builds that anyone might see must never share a
+version string, or the feedback they send back can't be told apart.
 
 ---
 
-## [Unreleased] — 5.0.0-dev
+## [Unreleased] — 5.0.0-dev.2 (current deployed build)
 
 `SKETCH_VERSION` now exists (results footer, saved concepts, build prompts,
-new log entries). Bump it to `5.0.0` at release; the constant lives in the
-engine state block and is set by `build-ideas-inline.js`.
+the saved-file comment, and every `ideas`/`ideaKeep` log entry). Deployed dev
+builds so far:
 
-### Wave 7 — the model generates the activity; the engine is the rubric (built 18 Aug)
+| Build | Deployed | Contains |
+|---|---|---|
+| `5.0.0-dev` | 18 Aug | Wave 7 first pass — idea generator inside the old tabbed page, button-triggered |
+| `5.0.0-dev.2` | 18 Aug | Wave 7 second pass — three-layer page, auto-generation, §7 wording, Workshop view toggle |
+
+Bump the `VERSION` constant at the top of `build-ideas-inline.js` on every
+deployed build; drop the `-dev` suffix at release.
+
+### Wave 7 — the model generates the activity; the engine is the rubric (built 18 Aug · 5.0.0-dev)
 
 Faculty said the activity was "what they already do with AI bolted on" — a
 sorting machine can only hand back the box you fit into, and a rewritten
@@ -132,7 +144,7 @@ score, an activity, a casting, a phase or a timing.
 - **Verified** regression byte-identical (12/12 cases, 10/10 Wave 5 tests) and
   portal smoke all green after the patch.
 
-### Wave 7, second pass — the three-layer results page (built 18 Aug)
+### Wave 7, second pass — the three-layer results page (built 18 Aug · 5.0.0-dev.2)
 
 Plan §6 and §7, plus auto-generation. The page now leads with the class, not
 the proof.
