@@ -1,9 +1,5 @@
-# test-harness scratch (regenerated on every run)
-_b.js
-_be.js
-_bi.js
-_pb.js
-_dbg.js
+# scratch — anything underscore-prefixed is a working file, never source
+_*
 
 # working artifacts, safe to delete per the handoff
 _check_p2.png

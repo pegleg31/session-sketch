@@ -151,6 +151,15 @@ const GOOD = {
 ok('C0 the good idea passes all fourteen checks', checkIdea(GOOD, payload) === null, checkIdea(GOOD, payload) || '');
 
 function variant(patch){ return Object.assign({}, GOOD, patch); }
+/* check 7 counts BOTH halves of a compound tool name — an idea that says
+   "ToolPak" but never "Excel" passes (learned from the first live run) */
+ok('C0b a ToolPak-only idea satisfies the tool check',
+   checkIdea(variant({
+     situation: GOOD.situation, why_ai: GOOD.why_ai,
+     steps: GOOD.steps.map(s => ({ minutes: s.minutes, text: s.text.replace(/Excel/gi, 'the ToolPak') })),
+     lands_early: GOOD.lands_early.replace(/Excel/gi, 'the ToolPak')
+   }), payload) === null);
+
 const REJECTS = [
   ['check 2', variant({ prep: '' })],
   ['check 2', variant({ numbers_are_targets: undefined })],

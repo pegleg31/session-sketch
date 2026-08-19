@@ -334,12 +334,14 @@ function checkIdea(idea, p){
     }
     if (!found) return "check 6 — the planted mistake is not quoted in goes_wrong";
   }
-  /* 7 — the tool appears. Match on the tool's NAME (the pre-comma/paren
-     segment): for "Excel, including the Data Analysis ToolPak" the qualifier
-     words ("data", "analysis") appear in any idea and would make the check
-     vacuous. */
+  /* 7 — the tool appears. Match any DISTINCTIVE word of the tool string:
+     generic words ("data", "analysis", "including") would make the check
+     vacuous, but restricting to the pre-comma name alone rejected a live idea
+     that said "ToolPak" throughout and never "Excel" (first live run, 18 Aug).
+     Both halves of a compound tool name count. */
   if (p.tool) {
-    var tw = ideaWords(p.tool.split(/[,(]/)[0]);
+    var TOOLGENERIC = { data:1, analysis:1, analytics:1, including:1, tools:1, tool:1, software:1, suite:1, version:1, edition:1, using:1 };
+    var tw = ideaWords(p.tool).filter(function(w){ return !TOOLGENERIC[w]; });
     if (!tw.length) tw = ideaWords(p.tool);
     var hit = false, alw = ideaWords(all).join(" ");
     for (i = 0; i < tw.length; i++){ if (alw.indexOf(tw[i]) > -1) { hit = true; break; } }
