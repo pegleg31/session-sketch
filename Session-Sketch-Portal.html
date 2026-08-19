@@ -98,6 +98,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--impact-blue);out
   padding:11px 14px;margin:10px 0 0;font-size:12.5px;color:#3f3d38}
 .fac .lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--warm-brown);margin-bottom:3px}
 body:not(.fac-on) .fac{display:none}
+body:not(.fac-on) .l3{display:none}
 .navrow{display:flex;gap:10px;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft)}
 .navrow .sp{margin-left:auto}
 .warn{background:#fff;border:1px solid var(--warm-brown);border-left-width:3px;border-radius:var(--radius);padding:11px 14px;margin:10px 0;font-size:13px}
@@ -381,7 +382,7 @@ body.resultview #result{display:block}
       <p class="sub">A few plain questions about your class &mdash; and a runnable Lab concept comes back.</p>
     </div>
     <div class="mast-actions">
-      <button class="btn btn-ghost-light btn-sm" id="facToggle">Facilitator notes: off</button>
+      <button class="btn btn-ghost-light btn-sm" id="facToggle">Workshop view: off</button>
       <button class="btn btn-ghost-light btn-sm" id="resetBtn">Start over</button>
     </div>
   </div>
@@ -1782,6 +1783,31 @@ function validateIdeas(raw, p){
 
 /* ================= run, store, log ================= */
 var ideasBusy = false, ideasErr = null, ideasRejectedAll = false;
+var ideasLastSig = null, ideasAutoSig = null;
+/* error and all-rejected are per-answer-set states: the moment any answer,
+   tag, activity or casting changes, they reset so the new concept gets its
+   own attempt */
+function ideasSyncSig(c){
+  var sig = ideaSig(c);
+  if (sig !== ideasLastSig){ ideasLastSig = sig; ideasErr = null; ideasRejectedAll = false; }
+  return sig;
+}
+/* Wave 7 §6 — the ideas ARE the first screen, so they generate when the
+   concept opens rather than waiting behind a button. Fires once per
+   answer-set (the sig); an error or an all-rejected run is not auto-retried —
+   the card offers a manual try-again instead. */
+function ideasMaybeAuto(c, sig){
+  if (ideasBusy || ideasErr || ideasRejectedAll) return false;
+  if (!ideasAvailable() || ideasFor(c)) return false;
+  if (ideasAutoSig === sig) return false;
+  if (typeof setTimeout !== "function") return false;
+  ideasAutoSig = sig;
+  /* hold the busy state through the 0ms gap so every render between now and
+     the call landing shows "Writing…", not a dead offer button */
+  ideasBusy = true;
+  setTimeout(function(){ ideasBusy = false; runIdeas(); }, 0);
+  return true;
+}
 function ideasRepaint(){
   var fn = (typeof paintResult === "function") ? paintResult
          : (typeof draw === "function") ? draw : null;
@@ -1884,19 +1910,20 @@ function ideaCardHTML(idea, i, kept){
   h += '<p><b>Why AI has to be here:</b> ' + esc(idea.why_ai) + '</p>';
   h += '<p><b>Prep:</b> ' + esc(idea.prep) + '</p>';
   h += '<details class="ideadt"' + (kept ? ' open' : '') + '><summary>See the detail</summary>';
+  /* §7 — plain words instead of our words */
   h += '<h3 style="margin-top:10px">The five steps</h3><ol class="rl">';
   idea.steps.forEach(function(s){ h += '<li><b>' + s.minutes + ' min</b> — ' + esc(s.text) + '</li>'; });
   h += '</ol>';
-  h += '<p><b>What lands early:</b> ' + esc(idea.lands_early) + '</p>';
-  h += '<p><b>Where it goes wrong on purpose:</b> ' + esc(idea.goes_wrong) + '</p>';
-  h += '<p><b>What only a person can do:</b> ' + esc(idea.human_only) + '</p>';
+  h += '<p><b>What makes it land, early:</b> ' + esc(idea.lands_early) + '</p>';
+  h += '<p><b>The mistake you&rsquo;re planting on purpose:</b> ' + esc(idea.goes_wrong) + '</p>';
+  h += '<p><b>The part AI can&rsquo;t do for them:</b> ' + esc(idea.human_only) + '</p>';
   h += '<p><b>They hand in:</b> ' + esc(idea.hand_in) + '</p>';
-  h += '<p><b>Next time they can:</b> ' + esc(idea.next_time) + '</p>';
+  h += '<p><b>What they can do next time:</b> ' + esc(idea.next_time) + '</p>';
   h += '<p><b>The file has to contain</b> <span class="muted-note">(every statistic is a target for whoever builds the file, not a prediction)</span>:</p><ul class="rl">';
   idea.file_spec.split(/\n/).map(function(x){ return x.trim(); }).filter(Boolean).forEach(function(x){ h += '<li>' + esc(x) + '</li>'; });
   h += '</ul>';
   h += '<div class="noprint" style="margin-top:10px">';
-  h += '<button class="btn btn-ink" data-icopy="' + i + '">Copy the build prompt for this idea</button> ';
+  h += '<button class="btn btn-ink" data-icopy="' + i + '">Write my Lab</button> ';
   h += '<button class="btn btn-ghost" data-ifile="' + i + '">Build my file</button>';
   h += '<span class="copied hide" data-icopied="' + i + '">Copied</span>';
   h += '</div>';
@@ -1906,15 +1933,19 @@ function ideaCardHTML(idea, i, kept){
   return h;
 }
 function ideasHTML(c){
-  var h = '<div class="card hero" data-tab="activity"><div class="eb">The activity, three ways</div>';
+  /* Layer 1 (§6): this section is the first screen. data-layer="1" is how the
+     portal lifts it above the tabs; everything else on the results page sits
+     inside the .l3 wrapper behind the workshop toggle. */
+  var h = '<div class="card hero" data-layer="1"><div class="eb">' + c.ty.icon + ' ' + esc(c.ty.name) + ' Lab &middot; ' + esc(c.title) + '</div>';
+  var sig = ideasSyncSig(c);
   var I = ideasFor(c);
   if (!ideasAvailable()){
     h += '<h2>Three ideas, written for this class</h2>';
-    h += '<p class="lead">Showing the standard version — the custom ideas need a connection. Opened online, this page writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation, a different job for AI, and the file to build. The concept below still stands on its own.</p>';
+    h += '<p class="lead">Showing the standard version — the custom ideas need a connection. Opened online, this page writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation, a different job for AI, and the file to build. Turn on the workshop view below to see the standard concept in full.</p>';
     h += '</div>';
     return h;
   }
-  if (ideasBusy){
+  if (ideasBusy || ideasMaybeAuto(c, sig)){
     h += '<h2>Writing three ideas…</h2>';
     h += '<p class="lead">Three activity ideas for ' + esc(c.topicShort) + ' — each with an invented situation, a different job for AI, and the exact file to build. Usually under a minute; leave the page open.</p>';
     h += '<div class="noprint"><button class="btn btn-ink" disabled>Writing…</button></div>';
@@ -1926,18 +1957,18 @@ function ideasHTML(c){
     }
     I.ideas.forEach(function(idea, i){ h += ideaCardHTML(idea, i, I.kept.indexOf(i) > -1); });
     h += '<div class="noprint" style="margin-top:4px"><button class="btn btn-ghost" data-ideas="run">Write three new ideas</button> <button class="btn btn-ghost" data-ideas="clear" style="margin-left:8px">Remove the ideas</button></div>';
-    if (I.usage) h += '<div class="fac"><div class="lbl">Facilitator note — cost</div>This run used ' + (I.usage.input_tokens || "?") + ' input / ' + (I.usage.output_tokens || "?") + ' output tokens (v ' + esc(I.v || SKETCH_VERSION) + ').</div>';
+    if (I.usage) h += '<div class="fac"><div class="lbl">What this run cost</div>This run used ' + (I.usage.input_tokens || "?") + ' input / ' + (I.usage.output_tokens || "?") + ' output tokens (v ' + esc(I.v || SKETCH_VERSION) + ').</div>';
   } else if (ideasRejectedAll){
     h += '<h2>Three ideas, written for this class</h2>';
-    h += '<p class="lead">Showing the standard version — the custom ideas did not meet the bar. Every idea that came back failed a hard rule and was rejected rather than repaired. The concept below still stands; try again if you like.</p>';
+    h += '<p class="lead">Showing the standard version — the custom ideas did not meet the bar. Every idea that came back failed a hard rule and was rejected rather than repaired. The standard concept is in the workshop view below; try again if you like.</p>';
     h += '<div class="noprint"><button class="btn btn-ink" data-ideas="run">Try again</button></div>';
   } else {
     h += '<h2>Three ideas, written for this class</h2>';
-    h += '<p class="lead">One click writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation (an invented client, a stake, a deadline), a different job for AI, the five steps with minutes, and the exact file to build. The engine has already decided the type and the casting; it also checks every idea against the hard rules and rejects any that fail. Nothing else on this page changes.</p>';
+    h += '<p class="lead">One click writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation (an invented client, a stake, a deadline), a different job for AI, the five steps with minutes, and the exact file to build. Your answers already decided the type and the casting; every idea is checked against the hard rules and any that fail are rejected.</p>';
     h += '<div class="noprint"><button class="btn btn-ink" data-ideas="run">Write three ideas</button></div>';
   }
   if (ideasErr){
-    h += '<div class="warn" style="margin-top:12px"><div class="lbl">The ideas did not arrive</div>' + esc(ideasErr) + ' Nothing is lost — the standard concept below still stands.</div>';
+    h += '<div class="warn" style="margin-top:12px"><div class="lbl">The ideas did not arrive</div>' + esc(ideasErr) + ' Nothing is lost — your answers are kept, and the standard concept is one click away in the workshop view.</div>';
   }
   h += '</div>';
   return h;
@@ -2133,7 +2164,7 @@ function resultHTML(){
     r.notReady.forEach(function(f){ h += '<div class="warn"><div class="lbl">'+esc(f.t)+'</div>'+esc(f.b)+'</div>'; });
     h += '<div class="callout"><div class="lbl">Where it stands anyway</div><p>On the answers so far the closest tag is '+esc(TYPES[r.ranked[0]].name)+
          ' at '+r.sc[r.ranked[0]].toFixed(1)+' points. That is a direction, not a recommendation.</p></div>'+
-         '<div class="fac"><div class="lbl">Facilitator note</div>Do not treat this screen as a failure in front of a faculty member. It almost always means the topic is one level too broad, or the mistake question has not been answered honestly yet. Both are two minutes of conversation.</div>'+
+         '<div class="fac"><div class="lbl">If you&rsquo;re running this as a workshop</div>Do not treat this screen as a failure in front of a faculty member. It almost always means the topic is one level too broad, or the mistake question has not been answered honestly yet. Both are two minutes of conversation.</div>'+
          '<div class="navrow noprint"><button class="btn btn-gold" data-go="0">&larr; Back to your answers</button></div></div>';
     return h;
   }
@@ -2171,7 +2202,7 @@ function resultHTML(){
   h += '</div>';
   h += '<div class="callout"><div class="lbl">'+(r.state==="two"?"The other candidate":"The runner-up")+' &mdash; '+esc(TYPES[r.ranked[1]].name)+'</div><p>'+esc(altLine(c, r.ranked[1]))+'</p></div>';
   h += '<div class="callout"><div class="lbl">Two rules that override any score</div><p><b>No rival and no clock, no Compete.</b> A countdown bolted onto a verification activity is decoration &mdash; if the audit survives without the timer, it is Research. <b>And if the artifact is for someone else to move through, it is Simulate, not Create</b>: a Create artifact is for the maker, a Simulate artifact is for a learner.</p></div>';
-  h += '<div class="fac"><div class="lbl">Facilitator note</div>Show the bars. Faculty trust a recommendation more when they can see what lost and why. If they want another tag, let them take it &mdash; the answers transfer straight across, and the tool will say what the switch obligates. The two override rules are the only place to hold firm.</div></div>';
+  h += '<div class="fac"><div class="lbl">If you&rsquo;re running this as a workshop</div>Show the bars. Faculty trust a recommendation more when they can see what lost and why. If they want another tag, let them take it &mdash; the answers transfer straight across, and the tool will say what the switch obligates. The two override rules are the only place to hold firm.</div></div>';
   var OBLIG = {
     arena:"A Compete Lab needs a rival or a real clock. You told us this work has neither, so you will need to invent one that is not decoration \u2014 the thinnest honest version is two teams producing competing answers and a published set of criteria.",
     lab:"A Research Lab needs a planted error and something real to verify against. Without both the Lab collapses into a summary, and the build prompt will say so in writing.",
@@ -2187,7 +2218,6 @@ function resultHTML(){
        }).join('')+'</div>'+
        (c.overridden ? '<div class="warn" style="margin-top:12px"><div class="lbl">What this obligates</div>'+esc(OBLIG[c.k]||"")+'</div>' : '')+
        '</div>';
-  h += ideasHTML(c);
   if(c.J){
     var _pool = jobPool(c.k, c.a);
     var _alts = _pool.filter(function(j){ return j.k!==c.job; });
@@ -2225,7 +2255,7 @@ function resultHTML(){
                 (pp.anchor?'<span class="pa">Anchor: '+esc(pp.anchor)+'</span>':'')+'</div>';
        }).join('')+
        '</div>'+
-       '<div class="fac"><div class="lbl">Facilitator note</div>Read all three aloud and watch which one they react to. Faculty who cannot describe a session in the abstract will almost always recognize the right activity when they hear it. If none of the three lands, the topic is probably still too broad &mdash; go back a step rather than forcing a fit.</div>'+
+       '<div class="fac"><div class="lbl">If you&rsquo;re running this as a workshop</div>Read all three aloud and watch which one they react to. Faculty who cannot describe a session in the abstract will almost always recognize the right activity when they hear it. If none of the three lands, the topic is probably still too broad &mdash; go back a step rather than forcing a fit.</div>'+
        '</div>';
   h += '<div class="card hero" data-tab="prompt"><div class="eb">The main output</div><h2>Where your Lab gets written</h2>'+
        '<p class="lead">This build prompt is the product. Copy it into your AI tool of choice and the finished session gets written from it — in your field’s voice, adapted to your students'+(c.tool?' and to '+esc(c.tool):'')+'. Every answer you gave is already inside it, along with instructions for the writing pass. The draft sketch below shows the shape of what will come back.</p>'+
@@ -2259,9 +2289,9 @@ function resultHTML(){
   h += '<dt>Wow moment</dt><dd>'+esc(wowOf(c))+'</dd>';
   h += '<dt>Failure by design</dt><dd>'+esc(failOf(c))+
        ((a.catch||"").trim() ? '<div class="callout" style="margin:10px 0 0"><div class="lbl">Plant this specific error</div><p>'+esc(a.catch)+'</p></div>' : '')+
-       (a.worry ? '<div class="fac"><div class="lbl">Facilitator note</div>'+esc(WORRY[a.worry])+'</div>' : '')+'</dd>';
+       (a.worry ? '<div class="fac"><div class="lbl">If you&rsquo;re running this as a workshop</div>'+esc(WORRY[a.worry])+'</div>' : '')+'</dd>';
   h += '<dt>Human contribution</dt><dd>'+esc(humanOf(c))+
-       (a.exper?'<div class="fac"><div class="lbl">Facilitator note</div>'+esc(EXPER[a.exper])+'</div>':'')+'</dd>';
+       (a.exper?'<div class="fac"><div class="lbl">If you&rsquo;re running this as a workshop</div>'+esc(EXPER[a.exper])+'</div>':'')+'</dd>';
   h += '<dt>Entry point</dt><dd>Required: a laptop and the topic you already teach. Not required: any coding, any prior AI experience, any paid tool or account. Students use an institutionally approved AI tool of their choice.</dd>';
   h += '<dt>Share format</dt><dd>'+esc(c.t.share)+' Works in a virtual classroom: screen-share plus one line in chat.</dd>';
   h += '<dt>Pillar 2 &mdash; safe use</dt><dd>Approved tools only. No real patient, client, student or employee data goes into any AI tool. If a student wants to use a non-approved tool, they pair with someone who is on an approved one.</dd>';
@@ -2283,9 +2313,12 @@ function resultHTML(){
        '<p class="lead" style="margin:0 0 8px"><b>If time runs short:</b> halve the &ldquo;'+esc(c.phases[c.t.cut-1].n)+'&rdquo; phase and cut sharing to three volunteers, everyone else submits one line. Never cut phase '+c.t.keep+' (&ldquo;'+esc(c.phases[c.t.keep-1].n)+'&rdquo;) or the reflection &mdash; the wow moment and the skill live there.</p>'+
        '<p class="lead" style="margin:0"><b>If energy is high:</b> '+esc(c.t.extend)+'</p>';
   h += '</div>';
-  h += '<div class="navrow noprint"><button class="btn btn-ghost" data-go="3">&larr; Change my answers</button></div>';
-  h += '<div style="margin:18px 2px 0;color:#8b9bad;font-size:11px">Session Sketch '+esc(SKETCH_VERSION)+'</div>';
-  return h;
+  /* Wave 7 §6 — three layers: the ideas are the first screen; everything the
+     page used to show waits behind the workshop toggle (.l3). The nav and the
+     version footer stay visible in both views. */
+  var _tail = '<div class="navrow noprint"><button class="btn btn-ghost" data-go="3">&larr; Change my answers</button></div>'
+            + '<div style="margin:18px 2px 0;color:#8b9bad;font-size:11px">Session Sketch '+esc(SKETCH_VERSION)+'</div>';
+  return ideasHTML(c) + '<div class="l3">' + h + '</div>' + _tail;
 }
 
 function wireResult(){
@@ -2652,6 +2685,7 @@ function downloadConcept(){
     '<style>'+styles+'</style></head>'+
     '<body class="'+(S.fac?"fac-on":"")+'"><div style="max-width:1000px;margin:0 auto;padding:24px 24px 60px">'+
     tmp.innerHTML+'</div>'+
+    '<!-- SESSION-SKETCH-VERSION: '+SKETCH_VERSION+' -->'+
     '<!-- SESSION-SKETCH-LOG: '+JSON.stringify(S.a.joblog||[])+' -->'+
     '</body></html>';
   var blob=new Blob([doc],{type:"text/html"});
@@ -2673,10 +2707,22 @@ function paintResult(){
   var c=concept();
   var tmp=document.createElement("div");
   tmp.innerHTML=resultHTML();
-  var panes={rec:[],activity:[],prompt:[],sketch:[]}, footer=[];
+  /* Wave 7 §6 — resultHTML returns three layers: the ideas section
+     (data-layer="1"), one .l3 wrapper holding every old card, and the
+     nav/version tail. Layer 1 renders above the tabs; the tabs and their
+     panes carry .l3 so the workshop toggle governs them; the tail stays. */
+  var layer1=[], l3kids=[], footer=[];
   Array.prototype.slice.call(tmp.children||[]).forEach(function(node){
+    if(node.getAttribute && node.getAttribute("data-layer")==="1"){ layer1.push(node); return; }
+    if(node.classList && node.classList.contains("l3")){
+      l3kids=l3kids.concat(Array.prototype.slice.call(node.children||[])); return;
+    }
+    footer.push(node);
+  });
+  var panes={rec:[],activity:[],prompt:[],sketch:[]};
+  l3kids.forEach(function(node){
     var tab=node.getAttribute ? node.getAttribute("data-tab") : null;
-    if(tab && panes[tab]) panes[tab].push(node); else footer.push(node);
+    if(tab && panes[tab]) panes[tab].push(node); else panes.rec.push(node);
   });
   var TABS=[["rec","Recommendation"],["activity","Activity"],["prompt","Build prompt"],["sketch","Session sketch"]];
   var active=(PS.rtab && panes[PS.rtab]) ? PS.rtab : "rec";
@@ -2686,10 +2732,12 @@ function paintResult(){
       '<button class="btn-back" data-dl-concept="1">⬇ Save concept</button>'+
       '<button class="btn-back" data-go="chat">← Change my answers</button>'+
     '</span></div>'+
-    '<div class="rtabs">'+TABS.map(function(t){
+    '<div class="rtabs l3">'+TABS.map(function(t){
       return '<button class="rtab'+(t[0]===active?" on":"")+'" data-rtab="'+t[0]+'">'+esc(t[1])+'</button>';
     }).join("")+'</div></div>';
-  box.innerHTML='<div class="rpage-in">'+head+'<div class="rpanes"></div><div class="rfooter"></div></div>';
+  box.innerHTML='<div class="rpage-in">'+head+'<div class="rlayer1"></div><div class="rpanes l3"></div><div class="rfooter"></div></div>';
+  var l1El=box.querySelector(".rlayer1");
+  if(l1El) layer1.forEach(function(n){ l1El.appendChild(n); });
   var panesEl=box.querySelector(".rpanes");
   if(panesEl){
     TABS.forEach(function(t){
@@ -2709,7 +2757,7 @@ function paintResult(){
 function renderAll(keepScroll){
   document.body.classList.toggle("fac-on", S.fac);
   var ft=document.getElementById("facToggle");
-  if(ft) ft.textContent="Facilitator notes: "+(S.fac?"on":"off");
+  if(ft) ft.textContent="Workshop view: "+(S.fac?"on":"off");
   var done=PS.ci>=FLOW.length;
   var showResult=done && PS.view!=="chat";
   document.body.classList.toggle("resultview", showResult);

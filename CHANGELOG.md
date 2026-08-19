@@ -132,15 +132,40 @@ score, an activity, a casting, a phase or a timing.
 - **Verified** regression byte-identical (12/12 cases, 10/10 Wave 5 tests) and
   portal smoke all green after the patch.
 
+### Wave 7, second pass — the three-layer results page (built 18 Aug)
+
+Plan §6 and §7, plus auto-generation. The page now leads with the class, not
+the proof.
+
+- **Changed** the results page to three layers. **Layer 1** — the idea cards
+  are the first screen; nothing else on it. **Layer 2** — each card opens to
+  its detail (any number open, any number kept). **Layer 3** — everything the
+  page used to show (verdict, score bars, casting card, activity card, build
+  prompt, sketch, roles, pacing, pillars) sits in an `.l3` wrapper shown only
+  when the workshop toggle is on. Nothing deleted; one toggle decides who the
+  page is for. The portal's tab row moved inside the workshop layer; the
+  wizard wraps at `resultHTML`'s return.
+- **Changed** ideas to **generate automatically when the concept opens** —
+  once per answer-set (signature-tracked), never auto-retried after an error
+  or an all-rejected run; those states offer a manual try-again. Changing any
+  answer re-generates on the next results view, which spends tokens per edit
+  by design.
+- **Changed** wording per §7: "What makes it land, early", "The mistake
+  you're planting on purpose", "The part AI can't do for them"; the per-idea
+  prompt button is now **Write my Lab**. The "Facilitator notes" toggle is
+  now **Workshop view**, and all six third-person facilitator notes are
+  relabelled "If you're running this as a workshop" (§11.5 — workshop wording
+  lives behind the toggle).
+- **Added** 12 assertions (93 total): layer order, footer placement,
+  relabelling, plain-word labels, auto-fire-once semantics, no-auto-retry.
+
 ### Wave 7 — still open
 
 Decision-sheet hand tests 1 (a no-right-answer case — Education or Justice)
 and 2 (a shorter planted error) are still to run; either may move the
-`IDEACHECK` thresholds. The full three-layer results-page restructure (Wave 7
-plan §6 — sketch/prompt/bars behind the facilitator toggle, faculty-alone
-wording pass) is designed but not built; the idea cards shipped inside the
-existing tabbed page. Decision 11's 22 fallback run strings and decision 12's
-"how it went" box are authoring/later work. Docs:
+`IDEACHECK` thresholds. Decision 11's 22 fallback run strings and decision
+12's "how it went" box (plan §9) are authoring/later work, and the notready
+page could still use a self-serve wording pass (§11.7). Docs:
 `Session-Sketch-wave7-results-page-plan.md`, `Session-Sketch-idea-prompt.md`
 (+ `-joins.md`), `Session-Sketch-decision-sheet.md`, `HANDOFF-to-code-wave7.md`.
 

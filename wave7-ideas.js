@@ -391,6 +391,31 @@ function validateIdeas(raw, p){
 
 /* ================= run, store, log ================= */
 var ideasBusy = false, ideasErr = null, ideasRejectedAll = false;
+var ideasLastSig = null, ideasAutoSig = null;
+/* error and all-rejected are per-answer-set states: the moment any answer,
+   tag, activity or casting changes, they reset so the new concept gets its
+   own attempt */
+function ideasSyncSig(c){
+  var sig = ideaSig(c);
+  if (sig !== ideasLastSig){ ideasLastSig = sig; ideasErr = null; ideasRejectedAll = false; }
+  return sig;
+}
+/* Wave 7 §6 — the ideas ARE the first screen, so they generate when the
+   concept opens rather than waiting behind a button. Fires once per
+   answer-set (the sig); an error or an all-rejected run is not auto-retried —
+   the card offers a manual try-again instead. */
+function ideasMaybeAuto(c, sig){
+  if (ideasBusy || ideasErr || ideasRejectedAll) return false;
+  if (!ideasAvailable() || ideasFor(c)) return false;
+  if (ideasAutoSig === sig) return false;
+  if (typeof setTimeout !== "function") return false;
+  ideasAutoSig = sig;
+  /* hold the busy state through the 0ms gap so every render between now and
+     the call landing shows "Writing…", not a dead offer button */
+  ideasBusy = true;
+  setTimeout(function(){ ideasBusy = false; runIdeas(); }, 0);
+  return true;
+}
 function ideasRepaint(){
   var fn = (typeof paintResult === "function") ? paintResult
          : (typeof draw === "function") ? draw : null;
@@ -493,19 +518,20 @@ function ideaCardHTML(idea, i, kept){
   h += '<p><b>Why AI has to be here:</b> ' + esc(idea.why_ai) + '</p>';
   h += '<p><b>Prep:</b> ' + esc(idea.prep) + '</p>';
   h += '<details class="ideadt"' + (kept ? ' open' : '') + '><summary>See the detail</summary>';
+  /* §7 — plain words instead of our words */
   h += '<h3 style="margin-top:10px">The five steps</h3><ol class="rl">';
   idea.steps.forEach(function(s){ h += '<li><b>' + s.minutes + ' min</b> — ' + esc(s.text) + '</li>'; });
   h += '</ol>';
-  h += '<p><b>What lands early:</b> ' + esc(idea.lands_early) + '</p>';
-  h += '<p><b>Where it goes wrong on purpose:</b> ' + esc(idea.goes_wrong) + '</p>';
-  h += '<p><b>What only a person can do:</b> ' + esc(idea.human_only) + '</p>';
+  h += '<p><b>What makes it land, early:</b> ' + esc(idea.lands_early) + '</p>';
+  h += '<p><b>The mistake you&rsquo;re planting on purpose:</b> ' + esc(idea.goes_wrong) + '</p>';
+  h += '<p><b>The part AI can&rsquo;t do for them:</b> ' + esc(idea.human_only) + '</p>';
   h += '<p><b>They hand in:</b> ' + esc(idea.hand_in) + '</p>';
-  h += '<p><b>Next time they can:</b> ' + esc(idea.next_time) + '</p>';
+  h += '<p><b>What they can do next time:</b> ' + esc(idea.next_time) + '</p>';
   h += '<p><b>The file has to contain</b> <span class="muted-note">(every statistic is a target for whoever builds the file, not a prediction)</span>:</p><ul class="rl">';
   idea.file_spec.split(/\n/).map(function(x){ return x.trim(); }).filter(Boolean).forEach(function(x){ h += '<li>' + esc(x) + '</li>'; });
   h += '</ul>';
   h += '<div class="noprint" style="margin-top:10px">';
-  h += '<button class="btn btn-ink" data-icopy="' + i + '">Copy the build prompt for this idea</button> ';
+  h += '<button class="btn btn-ink" data-icopy="' + i + '">Write my Lab</button> ';
   h += '<button class="btn btn-ghost" data-ifile="' + i + '">Build my file</button>';
   h += '<span class="copied hide" data-icopied="' + i + '">Copied</span>';
   h += '</div>';
@@ -515,15 +541,19 @@ function ideaCardHTML(idea, i, kept){
   return h;
 }
 function ideasHTML(c){
-  var h = '<div class="card hero" data-tab="activity"><div class="eb">The activity, three ways</div>';
+  /* Layer 1 (§6): this section is the first screen. data-layer="1" is how the
+     portal lifts it above the tabs; everything else on the results page sits
+     inside the .l3 wrapper behind the workshop toggle. */
+  var h = '<div class="card hero" data-layer="1"><div class="eb">' + c.ty.icon + ' ' + esc(c.ty.name) + ' Lab &middot; ' + esc(c.title) + '</div>';
+  var sig = ideasSyncSig(c);
   var I = ideasFor(c);
   if (!ideasAvailable()){
     h += '<h2>Three ideas, written for this class</h2>';
-    h += '<p class="lead">Showing the standard version — the custom ideas need a connection. Opened online, this page writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation, a different job for AI, and the file to build. The concept below still stands on its own.</p>';
+    h += '<p class="lead">Showing the standard version — the custom ideas need a connection. Opened online, this page writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation, a different job for AI, and the file to build. Turn on the workshop view below to see the standard concept in full.</p>';
     h += '</div>';
     return h;
   }
-  if (ideasBusy){
+  if (ideasBusy || ideasMaybeAuto(c, sig)){
     h += '<h2>Writing three ideas…</h2>';
     h += '<p class="lead">Three activity ideas for ' + esc(c.topicShort) + ' — each with an invented situation, a different job for AI, and the exact file to build. Usually under a minute; leave the page open.</p>';
     h += '<div class="noprint"><button class="btn btn-ink" disabled>Writing…</button></div>';
@@ -535,18 +565,18 @@ function ideasHTML(c){
     }
     I.ideas.forEach(function(idea, i){ h += ideaCardHTML(idea, i, I.kept.indexOf(i) > -1); });
     h += '<div class="noprint" style="margin-top:4px"><button class="btn btn-ghost" data-ideas="run">Write three new ideas</button> <button class="btn btn-ghost" data-ideas="clear" style="margin-left:8px">Remove the ideas</button></div>';
-    if (I.usage) h += '<div class="fac"><div class="lbl">Facilitator note — cost</div>This run used ' + (I.usage.input_tokens || "?") + ' input / ' + (I.usage.output_tokens || "?") + ' output tokens (v ' + esc(I.v || SKETCH_VERSION) + ').</div>';
+    if (I.usage) h += '<div class="fac"><div class="lbl">What this run cost</div>This run used ' + (I.usage.input_tokens || "?") + ' input / ' + (I.usage.output_tokens || "?") + ' output tokens (v ' + esc(I.v || SKETCH_VERSION) + ').</div>';
   } else if (ideasRejectedAll){
     h += '<h2>Three ideas, written for this class</h2>';
-    h += '<p class="lead">Showing the standard version — the custom ideas did not meet the bar. Every idea that came back failed a hard rule and was rejected rather than repaired. The concept below still stands; try again if you like.</p>';
+    h += '<p class="lead">Showing the standard version — the custom ideas did not meet the bar. Every idea that came back failed a hard rule and was rejected rather than repaired. The standard concept is in the workshop view below; try again if you like.</p>';
     h += '<div class="noprint"><button class="btn btn-ink" data-ideas="run">Try again</button></div>';
   } else {
     h += '<h2>Three ideas, written for this class</h2>';
-    h += '<p class="lead">One click writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation (an invented client, a stake, a deadline), a different job for AI, the five steps with minutes, and the exact file to build. The engine has already decided the type and the casting; it also checks every idea against the hard rules and rejects any that fail. Nothing else on this page changes.</p>';
+    h += '<p class="lead">One click writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation (an invented client, a stake, a deadline), a different job for AI, the five steps with minutes, and the exact file to build. Your answers already decided the type and the casting; every idea is checked against the hard rules and any that fail are rejected.</p>';
     h += '<div class="noprint"><button class="btn btn-ink" data-ideas="run">Write three ideas</button></div>';
   }
   if (ideasErr){
-    h += '<div class="warn" style="margin-top:12px"><div class="lbl">The ideas did not arrive</div>' + esc(ideasErr) + ' Nothing is lost — the standard concept below still stands.</div>';
+    h += '<div class="warn" style="margin-top:12px"><div class="lbl">The ideas did not arrive</div>' + esc(ideasErr) + ' Nothing is lost — your answers are kept, and the standard concept is one click away in the workshop view.</div>';
   }
   h += '</div>';
   return h;

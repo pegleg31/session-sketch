@@ -334,6 +334,7 @@ function downloadConcept(){
     '<style>'+styles+'</style></head>'+
     '<body class="'+(S.fac?"fac-on":"")+'"><div style="max-width:1000px;margin:0 auto;padding:24px 24px 60px">'+
     tmp.innerHTML+'</div>'+
+    '<!-- SESSION-SKETCH-VERSION: '+SKETCH_VERSION+' -->'+
     '<!-- SESSION-SKETCH-LOG: '+JSON.stringify(S.a.joblog||[])+' -->'+
     '</body></html>';
   var blob=new Blob([doc],{type:"text/html"});
@@ -355,10 +356,22 @@ function paintResult(){
   var c=concept();
   var tmp=document.createElement("div");
   tmp.innerHTML=resultHTML();
-  var panes={rec:[],activity:[],prompt:[],sketch:[]}, footer=[];
+  /* Wave 7 §6 — resultHTML returns three layers: the ideas section
+     (data-layer="1"), one .l3 wrapper holding every old card, and the
+     nav/version tail. Layer 1 renders above the tabs; the tabs and their
+     panes carry .l3 so the workshop toggle governs them; the tail stays. */
+  var layer1=[], l3kids=[], footer=[];
   Array.prototype.slice.call(tmp.children||[]).forEach(function(node){
+    if(node.getAttribute && node.getAttribute("data-layer")==="1"){ layer1.push(node); return; }
+    if(node.classList && node.classList.contains("l3")){
+      l3kids=l3kids.concat(Array.prototype.slice.call(node.children||[])); return;
+    }
+    footer.push(node);
+  });
+  var panes={rec:[],activity:[],prompt:[],sketch:[]};
+  l3kids.forEach(function(node){
     var tab=node.getAttribute ? node.getAttribute("data-tab") : null;
-    if(tab && panes[tab]) panes[tab].push(node); else footer.push(node);
+    if(tab && panes[tab]) panes[tab].push(node); else panes.rec.push(node);
   });
   var TABS=[["rec","Recommendation"],["activity","Activity"],["prompt","Build prompt"],["sketch","Session sketch"]];
   var active=(PS.rtab && panes[PS.rtab]) ? PS.rtab : "rec";
@@ -368,10 +381,12 @@ function paintResult(){
       '<button class="btn-back" data-dl-concept="1">⬇ Save concept</button>'+
       '<button class="btn-back" data-go="chat">← Change my answers</button>'+
     '</span></div>'+
-    '<div class="rtabs">'+TABS.map(function(t){
+    '<div class="rtabs l3">'+TABS.map(function(t){
       return '<button class="rtab'+(t[0]===active?" on":"")+'" data-rtab="'+t[0]+'">'+esc(t[1])+'</button>';
     }).join("")+'</div></div>';
-  box.innerHTML='<div class="rpage-in">'+head+'<div class="rpanes"></div><div class="rfooter"></div></div>';
+  box.innerHTML='<div class="rpage-in">'+head+'<div class="rlayer1"></div><div class="rpanes l3"></div><div class="rfooter"></div></div>';
+  var l1El=box.querySelector(".rlayer1");
+  if(l1El) layer1.forEach(function(n){ l1El.appendChild(n); });
   var panesEl=box.querySelector(".rpanes");
   if(panesEl){
     TABS.forEach(function(t){
@@ -391,7 +406,7 @@ function paintResult(){
 function renderAll(keepScroll){
   document.body.classList.toggle("fac-on", S.fac);
   var ft=document.getElementById("facToggle");
-  if(ft) ft.textContent="Facilitator notes: "+(S.fac?"on":"off");
+  if(ft) ft.textContent="Workshop view: "+(S.fac?"on":"off");
   var done=PS.ci>=FLOW.length;
   var showResult=done && PS.view!=="chat";
   document.body.classList.toggle("resultview", showResult);
