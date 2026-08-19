@@ -51,6 +51,7 @@ builds so far:
 | `5.0.0-dev.2` | 18 Aug | Wave 7 second pass — three-layer page, auto-generation, §7 wording, Workshop view toggle |
 | `5.0.0-dev.3` | 18 Aug | Fix: first real generation hit Vercel's 60s function ceiling (HTTP 504) — `maxDuration` raised to 300s; busy copy says "a minute or two" |
 | `5.0.0-dev.4` | 18 Aug | Check 7 loosened after the first live acceptance run (104.5s, 3 ideas, $0.19): it rejected an idea that said "ToolPak" throughout but never "Excel" — any distinctive word of the tool string now counts |
+| `5.0.0-dev.5` | 18 Aug | Rejection reasons are now shown on the page (all-rejected card gets a "What failed, rule by rule" list; partial rejections name their rule inline) and always printed to the console — a failed run is diagnosable without DevTools archaeology |
 
 Bump the `VERSION` constant at the top of `build-ideas-inline.js` on every
 deployed build; drop the `-dev` suffix at release.

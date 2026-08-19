@@ -1149,7 +1149,7 @@ var EXPER = {
 <script>
 "use strict";
 /* ---------- state ---------- */
-var SKETCH_VERSION = "5.0.0-dev.4";   /* set by build-ideas-inline.js — bump VERSION there, never here (see CHANGELOG.md) */
+var SKETCH_VERSION = "5.0.0-dev.5";   /* set by build-ideas-inline.js — bump VERSION there, never here (see CHANGELOG.md) */
 var KEY = "snhu-session-sketch-v2";   /* v2: S.a gained aijob + joblog (Wave 5) */
 var S = {step:0, fac:false, a:{}};
 var lastDrawnStep = null;   /* so an in-step re-render never scrolls the page */
@@ -1785,13 +1785,13 @@ function validateIdeas(raw, p){
 
 /* ================= run, store, log ================= */
 var ideasBusy = false, ideasErr = null, ideasRejectedAll = false;
-var ideasLastSig = null, ideasAutoSig = null;
+var ideasLastSig = null, ideasAutoSig = null, ideasLastReasons = [];
 /* error and all-rejected are per-answer-set states: the moment any answer,
    tag, activity or casting changes, they reset so the new concept gets its
    own attempt */
 function ideasSyncSig(c){
   var sig = ideaSig(c);
-  if (sig !== ideasLastSig){ ideasLastSig = sig; ideasErr = null; ideasRejectedAll = false; }
+  if (sig !== ideasLastSig){ ideasLastSig = sig; ideasErr = null; ideasRejectedAll = false; ideasLastReasons = []; }
   return sig;
 }
 /* Wave 7 §6 — the ideas ARE the first screen, so they generate when the
@@ -1827,11 +1827,16 @@ function runIdeas(){
   ideasBusy = true; ideasErr = null; ideasRejectedAll = false; ideasRepaint();
   getIdeas(p).then(function(r){
     var v = validateIdeas(r.ideas, p);
-    /* decision 5 — measure the cost on the first live call */
-    if (r.usage) { try { console.log("[Session Sketch " + SKETCH_VERSION + "] ideas call: " +
-      (r.usage.input_tokens || "?") + " in / " + (r.usage.output_tokens || "?") + " out tokens"); } catch(e){} }
+    /* decision 5 — measure the cost; and every rejection reason goes to the
+       console as well as the log, so a failure is diagnosable from any run */
+    try {
+      if (r.usage) console.log("[Session Sketch " + SKETCH_VERSION + "] ideas call: " +
+        (r.usage.input_tokens || "?") + " in / " + (r.usage.output_tokens || "?") + " out tokens");
+      v.reasons.forEach(function(x){ console.log("[Session Sketch " + SKETCH_VERSION + "] idea rejected: " + x); });
+    } catch(e){}
     jlog().push({ t: nowms(), e: "ideas", ok: v.ideas.length, failed: v.reasons.length, reasons: v.reasons, v: SKETCH_VERSION });
     ideasBusy = false;
+    ideasLastReasons = v.reasons.slice();
     if (!v.ideas.length) {
       ideasRejectedAll = true;                                   /* fallback: today's text, said plainly */
     } else {
@@ -1955,7 +1960,8 @@ function ideasHTML(c){
     h += '<h2>' + I.ideas.length + (I.ideas.length === 1 ? ' idea' : ' ideas') + ' for this class</h2>';
     h += '<p class="lead">The type, the casting and the rules came from your answers; the situations are invented to fit them. Open any of them — opening is not choosing. <b>Keep</b> the ones you could run: each kept idea gets its own build prompt, and the saved concept carries every kept idea. Two ideas is a term’s worth of material, not indecision.</p>';
     if (I.ideas.length < (I.shown || I.ideas.length) || I.ideas.length < 3){
-      h += '<p class="muted-note" style="margin:0 0 10px">' + I.ideas.length + ' of 3 met the bar — the rest were rejected rather than padded.</p>';
+      h += '<p class="muted-note" style="margin:0 0 10px">' + I.ideas.length + ' of 3 met the bar — the rest were rejected rather than padded' +
+           (ideasLastReasons.length ? ': ' + esc(ideasLastReasons.join(' · ')) : '.') + '</p>';
     }
     I.ideas.forEach(function(idea, i){ h += ideaCardHTML(idea, i, I.kept.indexOf(i) > -1); });
     h += '<div class="noprint" style="margin-top:4px"><button class="btn btn-ghost" data-ideas="run">Write three new ideas</button> <button class="btn btn-ghost" data-ideas="clear" style="margin-left:8px">Remove the ideas</button></div>';
@@ -1963,6 +1969,11 @@ function ideasHTML(c){
   } else if (ideasRejectedAll){
     h += '<h2>Three ideas, written for this class</h2>';
     h += '<p class="lead">Showing the standard version — the custom ideas did not meet the bar. Every idea that came back failed a hard rule and was rejected rather than repaired. The standard concept is in the workshop view below; try again if you like.</p>';
+    if (ideasLastReasons.length){
+      h += '<details class="axisdt" style="margin:0 0 12px"><summary>What failed, rule by rule</summary><ul class="rl" style="margin-top:8px">';
+      ideasLastReasons.forEach(function(x){ h += '<li>' + esc(x) + '</li>'; });
+      h += '</ul><p class="muted-note">These reasons are also written into the concept’s log — if the same rule keeps firing, that rule needs tuning, not your answers.</p></details>';
+    }
     h += '<div class="noprint"><button class="btn btn-ink" data-ideas="run">Try again</button></div>';
   } else {
     h += '<h2>Three ideas, written for this class</h2>';

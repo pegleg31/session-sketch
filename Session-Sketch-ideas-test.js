@@ -275,6 +275,8 @@ const BADIDEA = variant({ why_ai: 'It is quicker and more efficient.' });
   const html3 = ideasHTML(concept());
   ok('R9b the plain line: did not meet the bar, standard version stands',
      html3.indexOf('did not meet the bar') > -1 && html3.indexOf('rejected rather than repaired') > -1);
+  ok('R9c the rejected card names the rule each idea broke',
+     html3.indexOf('What failed, rule by rule') > -1 && html3.indexOf('check 5') > -1);
 
   /* transport error → plain warning, tool intact */
   global.fetch = function () { return Promise.reject(new Error('boom')); };

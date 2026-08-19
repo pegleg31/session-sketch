@@ -22,7 +22,7 @@ var fs = require("fs");
    handed to anyone — two builds must never share a version string, or the
    feedback they send back can't be told apart. Drop the -dev suffix at
    release and move the CHANGELOG's Unreleased section under it. */
-var VERSION = "5.0.0-dev.4";
+var VERSION = "5.0.0-dev.5";
 
 var FILE = "Session-Sketch.html";
 var s = fs.readFileSync(FILE, "utf8");
