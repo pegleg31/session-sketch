@@ -39,7 +39,7 @@ version string, or the feedback they send back can't be told apart.
 
 ---
 
-## [Unreleased] — 5.0.0-dev.2 (current deployed build)
+## [Unreleased] — 5.0.0-dev.N (the current build is the last row below)
 
 `SKETCH_VERSION` now exists (results footer, saved concepts, build prompts,
 the saved-file comment, and every `ideas`/`ideaKeep` log entry). Deployed dev
