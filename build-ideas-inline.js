@@ -22,7 +22,7 @@ var fs = require("fs");
    handed to anyone — two builds must never share a version string, or the
    feedback they send back can't be told apart. Drop the -dev suffix at
    release and move the CHANGELOG's Unreleased section under it. */
-var VERSION = "5.0.0-dev.5";
+var VERSION = "5.0.0-dev.6";
 
 var FILE = "Session-Sketch.html";
 var s = fs.readFileSync(FILE, "utf8");
@@ -191,6 +191,29 @@ rep("4c. .l3 hides unless the workshop toggle is on",
   'body:not(.fac-on) .fac{display:none}',
   'body:not(.fac-on) .fac{display:none}\n' +
   'body:not(.fac-on) .l3{display:none}');
+
+/* ---------- 4d. junk tool answers are treated as no tool ----------
+   A faculty member answered the OPTIONAL tool question with the literal word
+   "no" — the prompt then instructed the model to "Name no where it belongs"
+   and check 7 demanded an unmatchable word, rejecting all three ideas. The
+   normalizer lives in the engine state block so the wizard, the portal
+   playback, the build prompt and the ideas payload all agree. */
+rep("4d-1. toolClean() helper in the state block",
+  'function lenLabel(v){ return v==="two" ? "two class sessions" : (v||"50")+" minutes"; }',
+  'function lenLabel(v){ return v==="two" ? "two class sessions" : (v||"50")+" minutes"; }\n' +
+  '/* the tool question is optional, but people answer it negatively instead of\n' +
+  '   skipping — treat those answers as "no tool" everywhere */\n' +
+  'function toolClean(v){ v=(v==null?"":String(v)).trim(); return /^(no|none|n\\/?a|na|nope|nothing|not really|no specific tool|just laptops?|-+|x)\\.?$/i.test(v) ? "" : v; }');
+
+rep("4d-2. concept() runs the tool answer through toolClean",
+  '  var tool = (a.tool||"").trim();',
+  '  var tool = toolClean(a.tool);');
+
+/* ---------- 4e. the clarify note rides into the main build prompt ---------- */
+rep("4e. buildPrompt carries the professor's added context",
+  'L.push("What students should remember a year later: "+((a.remember||"").trim()||"—"));',
+  'L.push("What students should remember a year later: "+((a.remember||"").trim()||"—"));\n' +
+  '  if((a.ideasNote||"").trim()) L.push("More context from the faculty member, added after seeing output (their words; where it conflicts with anything above, this wins): "+a.ideasNote.trim());');
 
 /* ---------- 5. the workshop toggle owns the whole old page now ---------- */
 rep("5a. masthead toggle relabelled",

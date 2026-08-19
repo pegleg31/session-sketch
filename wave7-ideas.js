@@ -116,6 +116,10 @@ function ideasPayload(c){
     worry: a.worry || "",
     remember: (a.remember || "").trim(),
     avoid: (a.avoid || "").trim(),
+    /* free-text the professor adds after seeing output — the clarify loop.
+       Deliberately NOT in the signature: typing here never wipes stored
+       ideas; it takes effect on the next explicit rewrite. */
+    extra: (a.ideasNote || "").trim(),
     type: IDEATYPE[c.k] || (c.ty.name + " — " + c.ty.blurb),
     anchor: c.P.anchor || "",                         /* the one thing kept from the seventeen activities */
     castings: castKeys.map(function(k){
@@ -148,6 +152,14 @@ function buildIdeaPrompt(p){
   if (p.catchway) L.push("- **How that mistake gets caught here:** " + p.catchway);
   if (p.remember) L.push("- **What the professor wants students to remember in a year:** " + p.remember);
   if (p.avoid) L.push("- **Keep out of it:** " + p.avoid);
+  if (p.extra){
+    L.push("");
+    L.push("## More from the professor");
+    L.push("");
+    L.push("The professor added this in their own words, after seeing earlier output. Treat it as correction and context — where it contradicts anything above, this wins:");
+    L.push("");
+    L.push(p.extra);
+  }
   L.push("");
   L.push("## What has already been decided");
   L.push("");
@@ -343,9 +355,14 @@ function checkIdea(idea, p){
     var TOOLGENERIC = { data:1, analysis:1, analytics:1, including:1, tools:1, tool:1, software:1, suite:1, version:1, edition:1, using:1 };
     var tw = ideaWords(p.tool).filter(function(w){ return !TOOLGENERIC[w]; });
     if (!tw.length) tw = ideaWords(p.tool);
-    var hit = false, alw = ideaWords(all).join(" ");
-    for (i = 0; i < tw.length; i++){ if (alw.indexOf(tw[i]) > -1) { hit = true; break; } }
-    if (!hit) return "check 7 — the working tool (" + p.tool + ") never appears";
+    /* no distinctive words at all (a junk answer like "no" or "-") → there is
+       nothing meaningful to require; skip rather than fail unpassably. A
+       faculty member's whole run once died three-for-three on this. */
+    if (tw.length){
+      var hit = false, alw = ideaWords(all).join(" ");
+      for (i = 0; i < tw.length; i++){ if (alw.indexOf(tw[i]) > -1) { hit = true; break; } }
+      if (!hit) return "check 7 — the working tool (" + p.tool + ") never appears";
+    }
   }
   /* 8 — exactly five steps, minutes sum within tolerance */
   if (!idea.steps || idea.steps.length !== C.stepsRequired) return "check 8 — " + (idea.steps ? idea.steps.length : 0) + " steps, not " + C.stepsRequired;
@@ -448,7 +465,7 @@ function runIdeas(){
     if (!v.ideas.length) {
       ideasRejectedAll = true;                                   /* fallback: today's text, said plainly */
     } else {
-      c.a.ideas = { sig: sig, v: SKETCH_VERSION, at: nowms(), ideas: v.ideas, shown: v.ideas.length, kept: [], usage: r.usage || null };
+      c.a.ideas = { sig: sig, v: SKETCH_VERSION, at: nowms(), ideas: v.ideas, shown: v.ideas.length, kept: [], usage: r.usage || null, note: p.extra || "" };
     }
     ideasSave(); ideasRepaint();
   }).catch(function(e){
@@ -547,6 +564,16 @@ function ideaCardHTML(idea, i, kept){
   h += '</div>';
   return h;
 }
+/* the clarify loop — a free-text turn at the end of the intake. Whatever the
+   professor types rides into the next generation as correcting context. */
+function ideasNoteHTML(c, cta){
+  return '<div class="noprint" style="margin:14px 0 0">' +
+    '<label class="qt" style="display:block;margin:0 0 4px">Anything the ideas should know that the questions never asked?</label>' +
+    '<p class="qh" style="margin:0 0 6px">Your words, straight to the writer — a correction, a constraint, the thing that makes your class different. It is used the next time ideas are written' + (cta ? ' (' + cta + ')' : '') + '.</p>' +
+    '<textarea data-ideasnote="1" placeholder="e.g. most of my students work full-time in accounting firms; there is no class budget; the survey is about our own campus" style="width:100%;min-height:64px;box-sizing:border-box">' + esc(c.a.ideasNote || '') + '</textarea>' +
+    '</div>';
+}
+
 function ideasHTML(c){
   /* Layer 1 (§6): this section is the first screen. data-layer="1" is how the
      portal lifts it above the tabs; everything else on the results page sits
@@ -572,7 +599,8 @@ function ideasHTML(c){
            (ideasLastReasons.length ? ': ' + esc(ideasLastReasons.join(' · ')) : '.') + '</p>';
     }
     I.ideas.forEach(function(idea, i){ h += ideaCardHTML(idea, i, I.kept.indexOf(i) > -1); });
-    h += '<div class="noprint" style="margin-top:4px"><button class="btn btn-ghost" data-ideas="run">Write three new ideas</button> <button class="btn btn-ghost" data-ideas="clear" style="margin-left:8px">Remove the ideas</button></div>';
+    h += ideasNoteHTML(c, 'the button below');
+    h += '<div class="noprint" style="margin-top:8px"><button class="btn btn-ghost" data-ideas="run">Write three new ideas</button> <button class="btn btn-ghost" data-ideas="clear" style="margin-left:8px">Remove the ideas</button></div>';
     if (I.usage) h += '<div class="fac"><div class="lbl">What this run cost</div>This run used ' + (I.usage.input_tokens || "?") + ' input / ' + (I.usage.output_tokens || "?") + ' output tokens (v ' + esc(I.v || SKETCH_VERSION) + ').</div>';
   } else if (ideasRejectedAll){
     h += '<h2>Three ideas, written for this class</h2>';
@@ -582,11 +610,13 @@ function ideasHTML(c){
       ideasLastReasons.forEach(function(x){ h += '<li>' + esc(x) + '</li>'; });
       h += '</ul><p class="muted-note">These reasons are also written into the concept’s log — if the same rule keeps firing, that rule needs tuning, not your answers.</p></details>';
     }
-    h += '<div class="noprint"><button class="btn btn-ink" data-ideas="run">Try again</button></div>';
+    h += ideasNoteHTML(c, 'Try again uses it');
+    h += '<div class="noprint" style="margin-top:8px"><button class="btn btn-ink" data-ideas="run">Try again</button></div>';
   } else {
     h += '<h2>Three ideas, written for this class</h2>';
     h += '<p class="lead">One click writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation (an invented client, a stake, a deadline), a different job for AI, the five steps with minutes, and the exact file to build. Your answers already decided the type and the casting; every idea is checked against the hard rules and any that fail are rejected.</p>';
-    h += '<div class="noprint"><button class="btn btn-ink" data-ideas="run">Write three ideas</button></div>';
+    h += ideasNoteHTML(c, '');
+    h += '<div class="noprint" style="margin-top:8px"><button class="btn btn-ink" data-ideas="run">Write three ideas</button></div>';
   }
   if (ideasErr){
     h += '<div class="warn" style="margin-top:12px"><div class="lbl">The ideas did not arrive</div>' + esc(ideasErr) + ' Nothing is lost — your answers are kept, and the standard concept is one click away in the workshop view.</div>';
@@ -611,6 +641,14 @@ function ideaCopy(text, i){
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(flash, fallback);
   else fallback();
 }
+/* the clarify box saves as it types — no repaint, so focus never jumps */
+document.addEventListener("input", function(e){
+  var el = e.target;
+  if (el && el.getAttribute && el.getAttribute("data-ideasnote")){
+    S.a.ideasNote = el.value;
+    ideasSave();
+  }
+});
 document.addEventListener("click", function(e){
   var t = (e.target && e.target.closest) ? e.target : null;
   if (!t) return;

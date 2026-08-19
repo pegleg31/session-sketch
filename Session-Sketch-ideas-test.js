@@ -369,6 +369,45 @@ const BADIDEA = variant({ why_ai: 'It is quicker and more efficient.' });
   ok('A3 once stored, re-renders show the cards, no new call',
      ideasHTML(concept()).indexOf('The Handoff') > -1 && calls === 1);
 
+  /* ================= 7. junk tool answers and the clarify loop ============ */
+  /* "no" typed into the optional tool question rejected all three ideas live
+     (18 Aug): the prompt said "Name no where it belongs" and check 7 demanded
+     an unmatchable word. Never again. */
+  setAnswers({ tool: 'no' });
+  const cNo = concept();
+  ok('N1 a "no" tool answer is treated as no tool everywhere',
+     cNo.tool === '' && ideasPayload(cNo).tool === '' &&
+     buildIdeaPrompt(ideasPayload(cNo)).indexOf('Software students use') < 0 &&
+     buildPrompt(cNo).indexOf('Working tool') < 0);
+  ok('N1b other junk spellings too',
+     ['None', 'N/A', 'n/a', 'nope', '-', 'Nothing'].every(v => toolClean(v) === ''));
+  ok('N1c a real tool still passes through untouched', toolClean('MySQL Workbench') === 'MySQL Workbench');
+  ok('N2 check 7 skips when the tool has no distinctive words (never unpassable)',
+     checkIdea(GOOD, Object.assign({}, payload, { tool: 'no' })) === null);
+
+  setAnswers({ ideasNote: 'Most of my students work full-time at accounting firms; the survey is about our own campus services.' });
+  const cNote = concept(), pNote = ideasPayload(cNote), promptNote = buildIdeaPrompt(pNote);
+  ok('N3 the clarify note rides into the payload and the idea prompt, verbatim',
+     pNote.extra.indexOf('accounting firms') > -1 &&
+     promptNote.indexOf('## More from the professor') > -1 &&
+     promptNote.indexOf('this wins') > -1 &&
+     promptNote.indexOf('accounting firms') > -1);
+  ok('N3b the note also rides into the main build prompt',
+     buildPrompt(cNote).indexOf('More context from the faculty member') > -1 &&
+     buildPrompt(cNote).indexOf('accounting firms') > -1);
+  ok('N3c typing the note never wipes stored ideas (not in the signature)',
+     ideaSig(cNote) === ideaSig((function(){ setAnswers(); return concept(); })()));
+  setAnswers({ ideasNote: 'x' });
+  ok('N4 the clarify box renders in the cards, rejected and offer states', (function(){
+    /* offer state (fresh sig, auto disabled via consumed autoSig): check the
+       textarea markup is present wherever a rewrite can be triggered */
+    S.a.ideas = { sig: ideaSig(concept()), v: SKETCH_VERSION, at: 1, ideas: [GOOD], shown: 1, kept: [], usage: null, note: '' };
+    const inCards = ideasHTML(concept()).indexOf('data-ideasnote') > -1;
+    delete S.a.ideas;
+    return inCards;
+  })());
+  setAnswers();
+
   setAnswers({ course: 'MKT-339 Brand Strategy' });      // fresh sig again
   calls = 0; armCountingFetch(null, 'boom');
   ideasHTML(concept());

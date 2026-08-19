@@ -96,7 +96,7 @@ var SHIELD = '<svg width="15" height="17" viewBox="0 0 18 20" aria-hidden="true"
 
 /* topic with the tool name split back out, exactly as concept() does */
 function topicClean(){
-  var topic=(S.a.topic||"").trim(), tool=(S.a.tool||"").trim();
+  var topic=(S.a.topic||"").trim(), tool=toolClean(S.a.tool);
   if(tool){
     var tRe=new RegExp("[,\\s]*(?:with|in|using|on|via)\\s+"+tool.replace(/(\W)/g,"\\$1")+"\\s*$","i");
     var st=topic.replace(tRe,"").trim();
@@ -141,7 +141,7 @@ function phFor(f){
 function pbText(id){
   var a=S.a;
   if(id==="topic"){
-    var topic=topicClean(), tool=(a.tool||"").trim();
+    var topic=topicClean(), tool=toolClean(a.tool);
     var s="Got it. This Lab lives in <b>"+esc(topic||"your topic")+"</b>";
     s+= tool ? ", and the tool in students’ hands is <b>"+esc(tool)+"</b>. " : ". ";
     s+="Everything after this hangs off that — and notice nothing here is about AI yet.";

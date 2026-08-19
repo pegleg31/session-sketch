@@ -52,6 +52,7 @@ builds so far:
 | `5.0.0-dev.3` | 18 Aug | Fix: first real generation hit Vercel's 60s function ceiling (HTTP 504) — `maxDuration` raised to 300s; busy copy says "a minute or two" |
 | `5.0.0-dev.4` | 18 Aug | Check 7 loosened after the first live acceptance run (104.5s, 3 ideas, $0.19): it rejected an idea that said "ToolPak" throughout but never "Excel" — any distinctive word of the tool string now counts |
 | `5.0.0-dev.5` | 18 Aug | Rejection reasons are now shown on the page (all-rejected card gets a "What failed, rule by rule" list; partial rejections name their rule inline) and always printed to the console — a failed run is diagnosable without DevTools archaeology |
+| `5.0.0-dev.6` | 18 Aug | Two fixes from the second live failure (a professor answered the optional tool question with the word "no": the prompt said "Name no where it belongs" and check 7 became unpassable, rejecting all three ideas): junk tool answers (`no`, `none`, `n/a`, …) are normalized to empty everywhere via `toolClean()` (engine, portal playback, build prompt, ideas payload), and check 7 skips when the tool has no distinctive words. Plus the clarify loop: a free-text box on the ideas card — "anything the ideas should know that the questions never asked" — that rides into the next generation as professor-authority context, and into the main build prompt |
 
 Bump the `VERSION` constant at the top of `build-ideas-inline.js` on every
 deployed build; drop the `-dev` suffix at release.
