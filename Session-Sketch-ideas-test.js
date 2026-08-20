@@ -347,27 +347,99 @@ const BADIDEA = variant({ why_ai: 'It is quicker and more efficient.' });
   ok('L8 the toggle is relabelled in the wizard masthead',
      src.indexOf('>Workshop view: off<') > -1 && src.indexOf('"Workshop view: " + (S.fac?"on":"off")') > -1);
 
-  /* ================= 6. auto-generate on concept open ================= */
-  let calls = 0;
-  function armCountingFetch(ideas, rejectWith) {
-    global.fetch = function () {
-      calls++;
-      if (rejectWith) return Promise.reject(new Error(rejectWith));
+  /* ================= 6. the writer-asks-first flow ================= */
+  /* the stub answers by SCHEMA: a questions-shaped request is the clarity
+     pass, an ideas-shaped request is the writer */
+  let calls = { clarify: 0, ideas: 0 };
+  let lastClarifyPrompt = '', lastIdeasPrompt = '';
+  function armSmartFetch(opts) {
+    calls = { clarify: 0, ideas: 0 };
+    global.fetch = function (url, init) {
+      const body = JSON.parse(init.body);
+      const isClarify = !!(body.schema && body.schema.properties && body.schema.properties.questions);
+      if (isClarify) {
+        calls.clarify++; lastClarifyPrompt = body.prompt;
+        if (opts.rejectClarify) return Promise.reject(new Error('clarify boom'));
+        return Promise.resolve({ ok: true, status: 200,
+          text: () => Promise.resolve(JSON.stringify({ result: { questions: opts.questions || [] }, usage: { input_tokens: 5, output_tokens: 6 } })) });
+      }
+      calls.ideas++; lastIdeasPrompt = body.prompt;
+      if (opts.rejectIdeas) return Promise.reject(new Error('boom'));
       return Promise.resolve({ ok: true, status: 200,
-        text: () => Promise.resolve(JSON.stringify({ ideas: ideas, usage: { input_tokens: 10, output_tokens: 20 } })) });
+        text: () => Promise.resolve(JSON.stringify({ result: { ideas: opts.ideas || [] }, ideas: opts.ideas || [], usage: { input_tokens: 10, output_tokens: 20 } })) });
     };
   }
-  setAnswers({ course: 'MKT-338 Consumer Insights' });   // fresh sig
-  armCountingFetch([GOOD, IDEA2]);
+
+  /* clean intake: the writer has no questions → reads, then writes, one call each */
+  setAnswers({ course: 'MKT-338 Consumer Insights' });
+  armSmartFetch({ questions: [], ideas: [GOOD, IDEA2] });
   const auto1 = ideasHTML(concept());
-  const auto2 = ideasHTML(concept());                    // second render before the call lands
-  await new Promise(r => setTimeout(r, 30));
-  ok('A1 opening the concept generates without a click',
-     auto1.indexOf('Writing three ideas') > -1 && S.a.ideas && S.a.ideas.ideas.length === 2);
-  ok('A2 it fires exactly once per answer-set, even across re-renders',
-     calls === 1 && auto2.indexOf('Writing three ideas') > -1, calls + ' call(s)');
-  ok('A3 once stored, re-renders show the cards, no new call',
-     ideasHTML(concept()).indexOf('The Handoff') > -1 && calls === 1);
+  const auto2 = ideasHTML(concept());                    // re-render before anything lands
+  await new Promise(r => setTimeout(r, 80));
+  ok('A1 opening the concept reads the answers first, then writes — no clicks',
+     auto1.indexOf('Reading your answers') > -1 && S.a.ideas && S.a.ideas.ideas.length === 2,
+     'clarify=' + calls.clarify + ' ideas=' + calls.ideas);
+  ok('A2 each step fires exactly once per answer-set, across re-renders',
+     calls.clarify === 1 && calls.ideas === 1 && auto2.indexOf('Reading your answers') > -1);
+  ok('A3 once stored, re-renders show the cards, no new calls',
+     ideasHTML(concept()).indexOf('The Handoff') > -1 && calls.clarify === 1 && calls.ideas === 1);
+
+  /* the writer HAS questions: the chat renders, nothing writes until the
+     professor answers (or skips), and answers ride into the prompt verbatim */
+  setAnswers({ course: 'MKT-340 Services Marketing' });
+  armSmartFetch({ questions: [{ q: 'Which campus service is the survey actually about?', why: 'It anchors the invented client.' }], ideas: [GOOD, IDEA2] });
+  ideasHTML(concept());
+  await new Promise(r => setTimeout(r, 80));
+  const chat = ideasHTML(concept());
+  ok('Q1 the writer asks and the chat turn renders — no writing yet',
+     S.a.clarify && S.a.clarify.status === 'asked' &&
+     chat.indexOf('Before it writes, one question') > -1 &&
+     chat.indexOf('Which campus service') > -1 &&
+     chat.indexOf('data-clarifya="0"') > -1 &&
+     chat.indexOf('data-ideas="clarified"') > -1 && chat.indexOf('data-ideas="skipclarify"') > -1 &&
+     calls.ideas === 0, 'ideas calls: ' + calls.ideas);
+  S.a.clarify.qs[0].a = 'Dining services — the survey is about the new meal plan.';
+  clarifyResolve('done');
+  await new Promise(r => setTimeout(r, 80));
+  ok('Q2 the answer rides into the idea prompt with professor authority',
+     calls.ideas === 1 && S.a.ideas && S.a.ideas.ideas.length === 2 &&
+     lastIdeasPrompt.indexOf("The professor's answers to your questions") > -1 &&
+     lastIdeasPrompt.indexOf('Dining services') > -1 &&
+     lastIdeasPrompt.indexOf('the answer wins') > -1);
+
+  /* a failed clarity pass never blocks the product */
+  setAnswers({ course: 'MKT-341 Retail Strategy' });
+  armSmartFetch({ rejectClarify: true, ideas: [GOOD, IDEA2] });
+  ideasHTML(concept());
+  await new Promise(r => setTimeout(r, 120));
+  ok('Q3 a failed clarity pass is skipped and the ideas still write',
+     S.a.clarify && S.a.clarify.status === 'skipped' && S.a.ideas && S.a.ideas.ideas.length === 2 && calls.ideas === 1);
+
+  /* skipping writes without the Q&A section */
+  setAnswers({ course: 'MKT-342 Pricing' });
+  armSmartFetch({ questions: [{ q: 'Is there a real client?', why: 'stakes' }], ideas: [GOOD, IDEA2] });
+  ideasHTML(concept());
+  await new Promise(r => setTimeout(r, 80));
+  clarifyResolve('skipped');
+  await new Promise(r => setTimeout(r, 80));
+  ok('Q4 skipping the chat writes with what it has, no Q&A section',
+     calls.ideas === 1 && lastIdeasPrompt.indexOf("The professor's answers") < 0);
+
+  /* after an all-rejected run, askfix seeds the clarity pass with the reasons */
+  setAnswers({ course: 'MKT-343 B2B Marketing' });
+  armSmartFetch({ questions: [], ideas: [BADIDEA] });
+  ideasHTML(concept());
+  await new Promise(r => setTimeout(r, 120));
+  const rejectedCard = ideasHTML(concept());
+  ok('Q5 the rejected card offers the writer-asks path',
+     ideasRejectedAll === true && rejectedCard.indexOf('data-ideas="askfix"') > -1);
+  armSmartFetch({ questions: [{ q: 'What would make speed genuinely matter here?', why: 'the necessity rule keeps failing' }], ideas: [GOOD] });
+  runClarity(ideasLastReasons);
+  await new Promise(r => setTimeout(r, 80));
+  ok('Q6 askfix seeds the clarity prompt with the rule failures and reopens the chat',
+     lastClarifyPrompt.indexOf('previous set of ideas was rejected') > -1 &&
+     lastClarifyPrompt.indexOf('check 5') > -1 &&
+     S.a.clarify.status === 'asked' && ideasRejectedAll === false);
 
   /* ================= 7. junk tool answers and the clarify loop ============ */
   /* "no" typed into the optional tool question rejected all three ideas live
@@ -408,15 +480,16 @@ const BADIDEA = variant({ why_ai: 'It is quicker and more efficient.' });
   })());
   setAnswers();
 
+  /* a failed WRITE is still never auto-retried */
   setAnswers({ course: 'MKT-339 Brand Strategy' });      // fresh sig again
-  calls = 0; armCountingFetch(null, 'boom');
+  armSmartFetch({ questions: [], rejectIdeas: true });
   ideasHTML(concept());
-  await new Promise(r => setTimeout(r, 30));
+  await new Promise(r => setTimeout(r, 120));
   const afterErr = ideasHTML(concept());
-  await new Promise(r => setTimeout(r, 30));
-  ok('A4 a failed auto-run is not auto-retried — manual try-again only',
-     calls === 1 && afterErr.indexOf('The ideas did not arrive') > -1 &&
-     afterErr.indexOf('data-ideas="run"') > -1, calls + ' call(s)');
+  await new Promise(r => setTimeout(r, 80));
+  ok('A4 a failed write is not auto-retried — manual try-again only',
+     calls.ideas === 1 && afterErr.indexOf('The ideas did not arrive') > -1 &&
+     afterErr.indexOf('data-ideas="run"') > -1, calls.ideas + ' write call(s)');
 
   try { fs.unlinkSync('_bi.js'); } catch (e) {}
   console.log('\n' + pass + ' passed, ' + fail + ' failed');

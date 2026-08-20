@@ -33,6 +33,7 @@ var IDEACHECK = {
   banned: ["delve", "leverage", "robust", "unlock", "journey", "empower", "seamless", "in today's fast-paced"], /* check 9 */
   aiProducts: ["ChatGPT", "Copilot", "Gemini", "Claude"],  /* check 10 */
   fileSpecMinProps: 2,         /* check 11 */
+  clarifyMax: 3,               /* the writer may ask at most this many questions before writing */
   /* check 13 — a screen, not a guarantee: common brands a model reaches for.
      Case-sensitive word match. "Oracle" is deliberately absent (it is one of
      our casting names); extend freely. */
@@ -120,6 +121,11 @@ function ideasPayload(c){
        Deliberately NOT in the signature: typing here never wipes stored
        ideas; it takes effect on the next explicit rewrite. */
     extra: (a.ideasNote || "").trim(),
+    /* answered clarity questions, if the writer asked any — only when they
+       belong to THIS answer-set (a stale conversation never leaks in) */
+    clarifications: ((a.clarify && a.clarify.sig === ideaSig(c) && a.clarify.qs) || [])
+      .filter(function(x){ return x && (x.a || "").trim(); })
+      .map(function(x){ return { q: x.q, a: x.a.trim() }; }),
     type: IDEATYPE[c.k] || (c.ty.name + " — " + c.ty.blurb),
     anchor: c.P.anchor || "",                         /* the one thing kept from the seventeen activities */
     castings: castKeys.map(function(k){
@@ -129,12 +135,10 @@ function ideasPayload(c){
   };
 }
 
-/* ================= the prompt — Part A, templated. The hand-tested text is
-   the spec; anything Part A has that this lacks is a bug. ================= */
-function buildIdeaPrompt(p){
+/* ================= the prompts ================= */
+/* the class block, shared by the idea prompt and the clarity prompt */
+function ideaClassLines(p){
   var L = [];
-  L.push("You are helping design one class activity for a university course. Not a lesson plan, not a syllabus — one activity a professor can picture and run next week.");
-  L.push("");
   L.push("## The class");
   L.push("");
   L.push("- **Course:** " + p.course + " (" + p.subject + ")");
@@ -152,6 +156,23 @@ function buildIdeaPrompt(p){
   if (p.catchway) L.push("- **How that mistake gets caught here:** " + p.catchway);
   if (p.remember) L.push("- **What the professor wants students to remember in a year:** " + p.remember);
   if (p.avoid) L.push("- **Keep out of it:** " + p.avoid);
+  return L;
+}
+/* the professor's side of the clarify chat + the free-text note */
+function ideaProfessorLines(p){
+  var L = [];
+  if (p.clarifications && p.clarifications.length){
+    L.push("");
+    L.push("## The professor's answers to your questions");
+    L.push("");
+    L.push("You asked before writing; the professor answered in their own words. These answers are corrections and context — where one contradicts anything above, the answer wins:");
+    L.push("");
+    p.clarifications.forEach(function(x){
+      L.push("Q: " + x.q);
+      L.push("A: " + x.a);
+      L.push("");
+    });
+  }
   if (p.extra){
     L.push("");
     L.push("## More from the professor");
@@ -160,6 +181,15 @@ function buildIdeaPrompt(p){
     L.push("");
     L.push(p.extra);
   }
+  return L;
+}
+/* the idea prompt — Part A, templated. The hand-tested text is the spec;
+   anything Part A has that this lacks is a bug. */
+function buildIdeaPrompt(p){
+  var L = [];
+  L.push("You are helping design one class activity for a university course. Not a lesson plan, not a syllabus — one activity a professor can picture and run next week.");
+  L.push("");
+  L = L.concat(ideaClassLines(p)).concat(ideaProfessorLines(p));
   L.push("");
   L.push("## What has already been decided");
   L.push("");
@@ -258,12 +288,56 @@ var IDEASCHEMA = {
   required: ["ideas"], additionalProperties: false
 };
 
+/* ================= the clarity pass — the writer asks first =================
+   One small call before the expensive one: the writer reads the intake and
+   asks up to clarifyMax questions ONLY where an answer would noticeably
+   improve the ideas. A clean intake returns none and writing starts at once.
+   After a rejected run, the same call re-runs seeded with the rule failures. */
+function buildClarifyPrompt(p, reasons){
+  var L = [];
+  L.push("You are about to write three class activity ideas for a university professor, from the intake below. Before writing anything, decide whether the intake leaves you guessing anywhere that matters.");
+  L.push("");
+  L.push("Rules for asking:");
+  L.push("- Ask at most " + IDEACHECK.clarifyMax + " questions. Fewer is better. If the intake is clear enough to write good ideas from, return an empty questions list — do not invent questions to seem thorough.");
+  L.push("- Only ask what the professor alone can answer, and only where the answer would change the ideas — an ambiguous answer, a contradiction, a missing fact about how this class actually works.");
+  L.push("- One plain sentence per question, addressed to the professor directly. No jargon. Never re-ask something the intake already answers, and never ask about format or preferences.");
+  L.push("- For each question, `why` is one short line on what the answer unlocks.");
+  if (reasons && reasons.length){
+    L.push("");
+    L.push("A previous set of ideas was rejected by these hard rules — ask about whatever underlying gap caused them, not about the rules themselves:");
+    reasons.forEach(function(x){ L.push("- " + x); });
+  }
+  L.push("");
+  L = L.concat(ideaClassLines(p)).concat(ideaProfessorLines(p));
+  L.push("");
+  L.push("The ideas will be " + p.type);
+  return L.join("\n");
+}
+var CLARIFYSCHEMA = {
+  type: "object",
+  properties: {
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          q: { type: "string", description: "One plain sentence, addressed to the professor." },
+          why: { type: "string", description: "One short line: what the answer unlocks." }
+        },
+        required: ["q", "why"], additionalProperties: false
+      },
+      description: "Empty when the intake is clear enough to write from."
+    }
+  },
+  required: ["questions"], additionalProperties: false
+};
+
 /* ================= transport — one function, swap behind it (§B5) =========
    Pasted key (localStorage "snhu-sketch-key") calls the API direct from the
    browser — works from file://, for this machine and testing. Otherwise the
-   hosted /api/ideas Vercel function is the real answer. */
-function getIdeas(payload){
-  var prompt = buildIdeaPrompt(payload);
+   hosted /api/ideas Vercel function is the real answer. Both the idea call
+   and the clarity call ride the same relay; only prompt and schema differ. */
+function callModel(prompt, schema){
   var key = ideasKey();
   if (key) {
     return fetch("https://api.anthropic.com/v1/messages", {
@@ -278,7 +352,7 @@ function getIdeas(payload){
         model: "claude-opus-4-8",
         max_tokens: 12000,
         thinking: { type: "adaptive" },
-        output_config: { format: { type: "json_schema", schema: IDEASCHEMA } },
+        output_config: { format: { type: "json_schema", schema: schema } },
         messages: [{ role: "user", content: prompt }]
       })
     }).then(function(res){ return res.json().then(function(j){
@@ -286,20 +360,36 @@ function getIdeas(payload){
       if (j.stop_reason === "refusal") throw new Error("The AI service declined this request.");
       var text = "";
       (j.content || []).forEach(function(b){ if (b.type === "text") text += b.text; });
-      var parsed = JSON.parse(text);
-      return { ideas: parsed.ideas || [], usage: j.usage || null };
+      return { data: JSON.parse(text), usage: j.usage || null };
     }); });
   }
   return fetch("/api/ideas", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt: prompt, schema: IDEASCHEMA })
+    body: JSON.stringify({ prompt: prompt, schema: schema })
   }).then(function(res){ return res.text().then(function(txt){
     var j = null; try { j = JSON.parse(txt); } catch(e){}
     if (!res.ok) throw new Error((j && j.error) || ("The idea service returned HTTP " + res.status + "."));
-    if (!j || !j.ideas) throw new Error("The idea service sent back nothing usable.");
-    return { ideas: j.ideas, usage: j.usage || null };
+    /* the endpoint echoes the parsed structured output as `result` (and keeps
+       a legacy top-level `ideas` for old cached clients) */
+    var data = (j && (j.result || j)) || null;
+    if (!data) throw new Error("The idea service sent back nothing usable.");
+    return { data: data, usage: (j && j.usage) || null };
   }); });
+}
+function getIdeas(payload){
+  return callModel(buildIdeaPrompt(payload), IDEASCHEMA).then(function(r){
+    return { ideas: (r.data && r.data.ideas) || [], usage: r.usage };
+  });
+}
+function getClarity(payload, reasons){
+  return callModel(buildClarifyPrompt(payload, reasons), CLARIFYSCHEMA).then(function(r){
+    var qs = ((r.data && r.data.questions) || [])
+      .filter(function(x){ return x && (x.q || "").trim(); })
+      .slice(0, IDEACHECK.clarifyMax)
+      .map(function(x){ return { q: x.q.trim(), why: (x.why || "").trim(), a: "" }; });
+    return { questions: qs, usage: r.usage };
+  });
 }
 
 /* ================= the fourteen checks (§B4) — reject, never repair ====== */
@@ -409,8 +499,14 @@ function validateIdeas(raw, p){
 }
 
 /* ================= run, store, log ================= */
-var ideasBusy = false, ideasErr = null, ideasRejectedAll = false;
-var ideasLastSig = null, ideasAutoSig = null, ideasLastReasons = [];
+var ideasBusy = false, ideasBusyKind = "", ideasErr = null, ideasRejectedAll = false;
+var ideasLastSig = null, ideasAutoSig = null, clarifyAutoSig = null, ideasLastReasons = [];
+/* the writer's questions for the CURRENT answer-set (persisted in S.a.clarify:
+   {sig, status: "asked"|"done"|"skipped"|"empty", qs:[{q,why,a}]}) */
+function clarifyFor(c){
+  var C = c.a && c.a.clarify;
+  return (C && C.sig === ideaSig(c)) ? C : null;
+}
 /* error and all-rejected are per-answer-set states: the moment any answer,
    tag, activity or casting changes, they reset so the new concept gets its
    own attempt */
@@ -419,21 +515,62 @@ function ideasSyncSig(c){
   if (sig !== ideasLastSig){ ideasLastSig = sig; ideasErr = null; ideasRejectedAll = false; ideasLastReasons = []; }
   return sig;
 }
-/* Wave 7 §6 — the ideas ARE the first screen, so they generate when the
-   concept opens rather than waiting behind a button. Fires once per
-   answer-set (the sig); an error or an all-rejected run is not auto-retried —
-   the card offers a manual try-again instead. */
+/* Wave 7 §6 + the clarify chat — the flow when the concept opens:
+     1. the writer READS the intake first (one small call) and may ask up to
+        clarifyMax questions; a clean intake asks none
+     2. questions render as a chat turn; the professor answers or skips
+     3. the ideas generate, carrying the answers as professor-authority context
+   Each auto step fires once per answer-set (the sig); errors and all-rejected
+   runs are never auto-retried — the card offers the manual path instead. */
 function ideasMaybeAuto(c, sig){
   if (ideasBusy || ideasErr || ideasRejectedAll) return false;
   if (!ideasAvailable() || ideasFor(c)) return false;
-  if (ideasAutoSig === sig) return false;
   if (typeof setTimeout !== "function") return false;
+  var CL = clarifyFor(c);
+  if (!CL){
+    if (clarifyAutoSig === sig) return false;
+    clarifyAutoSig = sig;
+    /* hold the busy state through the 0ms gap so every render in between
+       shows progress, not a dead offer button */
+    ideasBusy = true; ideasBusyKind = "clarify";
+    setTimeout(function(){ ideasBusy = false; runClarity(); }, 0);
+    return true;
+  }
+  if (CL.status === "asked") return false;      /* waiting on the professor — the chat renders */
+  if (ideasAutoSig === sig) return false;
   ideasAutoSig = sig;
-  /* hold the busy state through the 0ms gap so every render between now and
-     the call landing shows "Writing…", not a dead offer button */
-  ideasBusy = true;
+  ideasBusy = true; ideasBusyKind = "ideas";
   setTimeout(function(){ ideasBusy = false; runIdeas(); }, 0);
   return true;
+}
+/* the clarity pass. Never blocks the product: any failure marks the pass
+   skipped and writing proceeds with what we have. */
+function runClarity(reasons){
+  if (ideasBusy || !ideasAvailable()) return;
+  if (score().state === "notready") return;
+  var c = concept(), sig = ideaSig(c), p = ideasPayload(c);
+  ideasBusy = true; ideasBusyKind = "clarify"; ideasRepaint();
+  getClarity(p, reasons).then(function(r){
+    ideasBusy = false;
+    S.a.clarify = { sig: sig, status: r.questions.length ? "asked" : "empty", qs: r.questions };
+    jlog().push({ t: nowms(), e: "clarify", asked: r.questions.length, retry: !!(reasons && reasons.length), v: SKETCH_VERSION });
+    if (reasons && reasons.length && r.questions.length) ideasRejectedAll = false;  /* the chat takes over from the rejected card */
+    ideasSave(); ideasRepaint();
+  }).catch(function(e){
+    ideasBusy = false;
+    S.a.clarify = { sig: sig, status: "skipped", qs: [] };   /* degrade: write without asking */
+    try { console.log("[Session Sketch " + SKETCH_VERSION + "] clarity pass failed, writing anyway: " + ((e && e.message) || e)); } catch(x){}
+    ideasSave(); ideasRepaint();
+  });
+}
+/* the professor finished the chat turn (answered or skipped) → write */
+function clarifyResolve(status){
+  var c = concept(), CL = clarifyFor(c);
+  if (!CL) return;
+  CL.status = status;
+  ideasSave();
+  runIdeas();
+  ideasRepaint();
 }
 function ideasRepaint(){
   var fn = (typeof paintResult === "function") ? paintResult
@@ -449,7 +586,7 @@ function runIdeas(){
   if (ideasBusy || !ideasAvailable()) return;
   if (score().state === "notready") return;
   var c = concept(), sig = ideaSig(c), p = ideasPayload(c);
-  ideasBusy = true; ideasErr = null; ideasRejectedAll = false; ideasRepaint();
+  ideasBusy = true; ideasBusyKind = "ideas"; ideasErr = null; ideasRejectedAll = false; ideasRepaint();
   getIdeas(p).then(function(r){
     var v = validateIdeas(r.ideas, p);
     /* decision 5 — measure the cost; and every rejection reason goes to the
@@ -569,7 +706,7 @@ function ideaCardHTML(idea, i, kept){
 function ideasNoteHTML(c, cta){
   return '<div class="noprint" style="margin:14px 0 0">' +
     '<label class="qt" style="display:block;margin:0 0 4px">Anything the ideas should know that the questions never asked?</label>' +
-    '<p class="qh" style="margin:0 0 6px">Your words, straight to the writer — a correction, a constraint, the thing that makes your class different. It is used the next time ideas are written' + (cta ? ' (' + cta + ')' : '') + '.</p>' +
+    '<p class="qh" style="margin:0 0 6px">Your words, straight to the writer — a correction, a constraint, the thing that makes your class different. It is used the next time ideas are written' + (cta ? ' (' + cta + ')' : '') + '. Public information only, per SNHU&rsquo;s AI &amp; data guidance.</p>' +
     '<textarea data-ideasnote="1" placeholder="e.g. most of my students work full-time in accounting firms; there is no class budget; the survey is about our own campus" style="width:100%;min-height:64px;box-sizing:border-box">' + esc(c.a.ideasNote || '') + '</textarea>' +
     '</div>';
 }
@@ -588,9 +725,29 @@ function ideasHTML(c){
     return h;
   }
   if (ideasBusy || ideasMaybeAuto(c, sig)){
-    h += '<h2>Writing three ideas…</h2>';
-    h += '<p class="lead">Three activity ideas for ' + esc(c.topicShort) + ' — each with an invented situation, a different job for AI, and the exact file to build. This is real writing and usually takes a minute or two; leave the page open.</p>';
-    h += '<div class="noprint"><button class="btn btn-ink" disabled>Writing…</button></div>';
+    if (ideasBusyKind === "clarify"){
+      h += '<h2>Reading your answers…</h2>';
+      h += '<p class="lead">Before writing, the writer checks your answers for anything unclear or missing. If it has a question, it asks you first; if not, the ideas start writing on their own. A few seconds.</p>';
+      h += '<div class="noprint"><button class="btn btn-ink" disabled>Reading…</button></div>';
+    } else {
+      h += '<h2>Writing three ideas…</h2>';
+      h += '<p class="lead">Three activity ideas for ' + esc(c.topicShort) + ' — each with an invented situation, a different job for AI, and the exact file to build. This is real writing and usually takes a minute or two; leave the page open.</p>';
+      h += '<div class="noprint"><button class="btn btn-ink" disabled>Writing…</button></div>';
+    }
+  } else if (!I && clarifyFor(c) && clarifyFor(c).status === "asked"){
+    /* the chat turn: the writer asked; the professor answers or skips */
+    var CL = clarifyFor(c);
+    h += '<h2>Before it writes, ' + (CL.qs.length === 1 ? 'one question' : CL.qs.length + ' questions') + '</h2>';
+    h += '<p class="lead">The writer read your answers and wants to be sure of ' + (CL.qs.length === 1 ? 'one thing' : 'a few things') + ' before inventing the ideas. Answer in your own words — a sentence is plenty — or skip and it writes with what it has.</p>';
+    h += '<p class="muted-note" style="margin:0 0 10px">Public information only, per SNHU&rsquo;s AI &amp; data guidance — no student records, no personal or confidential details.</p>';
+    CL.qs.forEach(function(x, i){
+      h += '<div class="callout" style="margin:0 0 10px"><div class="lbl">The writer asks</div>' +
+           '<p style="margin:0 0 4px">' + esc(x.q) + '</p>' +
+           (x.why ? '<p class="muted-note" style="margin:0 0 8px">' + esc(x.why) + '</p>' : '') +
+           '<textarea data-clarifya="' + i + '" placeholder="Your answer, in your words…" style="width:100%;min-height:48px;box-sizing:border-box">' + esc(x.a || '') + '</textarea></div>';
+    });
+    h += '<div class="noprint"><button class="btn btn-ink" data-ideas="clarified">Use my answers and write the ideas</button> ' +
+         '<button class="btn btn-ghost" data-ideas="skipclarify" style="margin-left:8px">Skip — write with what it has</button></div>';
   } else if (I){
     h += '<h2>' + I.ideas.length + (I.ideas.length === 1 ? ' idea' : ' ideas') + ' for this class</h2>';
     h += '<p class="lead">The type, the casting and the rules came from your answers; the situations are invented to fit them. Open any of them — opening is not choosing. <b>Keep</b> the ones you could run: each kept idea gets its own build prompt, and the saved concept carries every kept idea. Two ideas is a term’s worth of material, not indecision.</p>';
@@ -611,7 +768,8 @@ function ideasHTML(c){
       h += '</ul><p class="muted-note">These reasons are also written into the concept’s log — if the same rule keeps firing, that rule needs tuning, not your answers.</p></details>';
     }
     h += ideasNoteHTML(c, 'Try again uses it');
-    h += '<div class="noprint" style="margin-top:8px"><button class="btn btn-ink" data-ideas="run">Try again</button></div>';
+    h += '<div class="noprint" style="margin-top:8px"><button class="btn btn-ink" data-ideas="askfix">Let the writer ask you what to fix</button> ' +
+         '<button class="btn btn-ghost" data-ideas="run" style="margin-left:8px">Just try again</button></div>';
   } else {
     h += '<h2>Three ideas, written for this class</h2>';
     h += '<p class="lead">One click writes three activity ideas for ' + esc(c.topicShort) + ' — each with a real situation (an invented client, a stake, a deadline), a different job for AI, the five steps with minutes, and the exact file to build. Your answers already decided the type and the casting; every idea is checked against the hard rules and any that fail are rejected.</p>';
@@ -641,12 +799,20 @@ function ideaCopy(text, i){
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(flash, fallback);
   else fallback();
 }
-/* the clarify box saves as it types — no repaint, so focus never jumps */
+/* the clarify box and the chat answers save as they type — no repaint, so
+   focus never jumps */
 document.addEventListener("input", function(e){
   var el = e.target;
-  if (el && el.getAttribute && el.getAttribute("data-ideasnote")){
+  if (!el || !el.getAttribute) return;
+  if (el.getAttribute("data-ideasnote")){
     S.a.ideasNote = el.value;
     ideasSave();
+    return;
+  }
+  var qa = el.getAttribute("data-clarifya");
+  if (qa != null && qa !== ""){
+    var CL = S.a.clarify;
+    if (CL && CL.qs && CL.qs[+qa]){ CL.qs[+qa].a = el.value; ideasSave(); }
   }
 });
 document.addEventListener("click", function(e){
@@ -655,7 +821,11 @@ document.addEventListener("click", function(e){
   var b;
   if ((b = t.closest("[data-ideas]"))){
     var v = b.getAttribute("data-ideas");
-    if (v === "run") runIdeas(); else if (v === "clear") clearIdeas();
+    if (v === "run") runIdeas();
+    else if (v === "clear") clearIdeas();
+    else if (v === "clarified") clarifyResolve("done");
+    else if (v === "skipclarify") clarifyResolve("skipped");
+    else if (v === "askfix") runClarity(ideasLastReasons);
     return;
   }
   if ((b = t.closest("[data-ikeep]"))){

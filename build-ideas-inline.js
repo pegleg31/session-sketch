@@ -22,7 +22,7 @@ var fs = require("fs");
    handed to anyone — two builds must never share a version string, or the
    feedback they send back can't be told apart. Drop the -dev suffix at
    release and move the CHANGELOG's Unreleased section under it. */
-var VERSION = "5.0.0-dev.6";
+var VERSION = "5.0.0-dev.7";
 
 var FILE = "Session-Sketch.html";
 var s = fs.readFileSync(FILE, "utf8");
@@ -214,6 +214,14 @@ rep("4e. buildPrompt carries the professor's added context",
   'L.push("What students should remember a year later: "+((a.remember||"").trim()||"—"));',
   'L.push("What students should remember a year later: "+((a.remember||"").trim()||"—"));\n' +
   '  if((a.ideasNote||"").trim()) L.push("More context from the faculty member, added after seeing output (their words; where it conflicts with anything above, this wins): "+a.ideasNote.trim());');
+
+/* ---------- 4f. the data-guidance line, in the masthead ----------
+   Always visible on both surfaces (build-portal.js lifts the masthead and
+   retitles only the first sub line, so this second line survives). */
+rep("4f. SNHU AI & data guidance note in the masthead",
+  '<p class="sub">Turn what you already teach into a runnable Lab concept.</p>',
+  '<p class="sub">Turn what you already teach into a runnable Lab concept.</p>\n' +
+  '      <p class="sub" style="font-size:12px;opacity:.85;margin-top:2px">Follow all SNHU AI &amp; data guidance &mdash; enter public information only. No student records, no personal or confidential data.</p>');
 
 /* ---------- 5. the workshop toggle owns the whole old page now ---------- */
 rep("5a. masthead toggle relabelled",

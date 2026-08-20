@@ -117,6 +117,11 @@ module.exports = async function handler(req, res) {
   }
 
   res.status(200).json({
+    /* the full structured output — the client reads this. The endpoint is a
+       generic prompt+schema relay: the idea call and the clarity call differ
+       only in what they send. */
+    result: data,
+    /* legacy field so a cached pre-dev.7 client keeps working during deploy skew */
     ideas: Array.isArray(data.ideas) ? data.ideas : [],
     usage: msg.usage ? { input_tokens: msg.usage.input_tokens, output_tokens: msg.usage.output_tokens } : null,
     model: msg.model || "claude-opus-4-8"
